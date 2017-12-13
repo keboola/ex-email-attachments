@@ -39,14 +39,14 @@ class RunCommand extends Command
             $outputPath = "$dataDirectory/out/tables";
             (new Filesystem())->mkdir([$outputPath]);
 
-            $validatedConfig = $this->validateInput($config);
-            $validatedConfig['outputPath'] = $outputPath;
-            $validatedConfig['output'] = $consoleOutput;
-            if (!empty($config['parameters']['bucket'])) {
-                $validatedConfig['bucket'] = $config['parameters']['bucket'];
-            }
+            $appConfiguration = $this->validateAppConfiguration($config);
+            $appConfiguration['output'] = $consoleOutput;
 
+            $userConfiguration = $this->validateUserConfiguration($config);
+            $userConfiguration['outputPath'] = $outputPath;
 
+            $app = new App($appConfiguration);
+            $app->run($userConfiguration);
 
             return 0;
         } catch (Exception $e) {
@@ -62,8 +62,36 @@ class RunCommand extends Command
         }
     }
 
-    public function validateInput($config)
+    public function validateAppConfiguration($config)
     {
+        if (!isset($config['image_parameters']['access_key_id'])) {
+            throw new \Exception('Access key id is missing from image parameters');
+        }
+        if (!isset($config['image_parameters']['#secret_access_key'])) {
+            throw new \Exception('Secret access key is missing from image parameters');
+        }
+        if (!isset($config['image_parameters']['region'])) {
+            throw new \Exception('Region is missing from image parameters');
+        }
+        if (!isset($config['image_parameters']['email_domain'])) {
+            throw new \Exception('Email domain is missing from image parameters');
+        }
+        return [
+            'accessKeyId' => $config['image_parameters']['access_key_id'],
+            'secretAccessKey' => $config['image_parameters']['#secret_access_key'],
+            'region' => $config['image_parameters']['region'],
+            'emailDomain' => $config['image_parameters']['email_domain'],
+        ];
+    }
 
+    public function validateUserConfiguration($config)
+    {
+        $result = [];
+        $result['action'] = isset($config['action']) ? $config['action'] : 'run';
+        if (!isset($config['storage']) || !isset($config['storage']['output'])
+            || !isset($config['storage']['output']['tables']) || !count($config['storage']['output']['tables'])) {
+            throw new Exception('There is no table in output mapping cofnigured');
+        }
+        return $result;
     }
 }
