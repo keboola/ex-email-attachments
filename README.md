@@ -1,5 +1,5 @@
-# pigeon
-KBC Docker app provisions email maiboxes and monitors them for incoming csv files in attachments which are imported to Keboola Storage.
+# Pigeon
+KBC Docker app provisions email mailboxes and monitors them for incoming csv files in attachments which are imported to Keboola Storage.
 
 ## Status
 

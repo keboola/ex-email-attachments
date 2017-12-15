@@ -13,4 +13,4 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });
 
-require_once ROOT_PATH . '/vendor/autoload.php';
+require_once ROOT_PATH . '/../vendor/autoload.php';

@@ -6,6 +6,7 @@
  */
 namespace Keboola\Pigeon;
 
+use Keboola\Temp\Temp;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Serializer\Encoder\JsonDecode;
@@ -45,8 +46,8 @@ class RunCommand extends Command
             $userConfiguration = $this->validateUserConfiguration($config);
             $userConfiguration['outputPath'] = $outputPath;
 
-            $app = new App($appConfiguration);
-            $app->run($userConfiguration);
+            $app = new App($appConfiguration, new Temp());
+            $consoleOutput->writeln($app->run($userConfiguration));
 
             return 0;
         } catch (Exception $e) {
@@ -64,33 +65,33 @@ class RunCommand extends Command
 
     public function validateAppConfiguration($config)
     {
-        if (!isset($config['image_parameters']['access_key_id'])) {
-            throw new \Exception('Access key id is missing from image parameters');
-        }
-        if (!isset($config['image_parameters']['#secret_access_key'])) {
-            throw new \Exception('Secret access key is missing from image parameters');
-        }
-        if (!isset($config['image_parameters']['region'])) {
-            throw new \Exception('Region is missing from image parameters');
-        }
-        if (!isset($config['image_parameters']['email_domain'])) {
-            throw new \Exception('Email domain is missing from image parameters');
+        foreach (['access_key_id', '#secret_access_key', 'region', 'bucket', 'email_domain', 'rule_set'] as $input) {
+            if (!isset($config['image_parameters'][$input])) {
+                throw new \Exception("$input is missing from image parameters");
+            }
         }
         return [
             'accessKeyId' => $config['image_parameters']['access_key_id'],
             'secretAccessKey' => $config['image_parameters']['#secret_access_key'],
             'region' => $config['image_parameters']['region'],
+            'bucket' => $config['image_parameters']['bucket'],
             'emailDomain' => $config['image_parameters']['email_domain'],
+            'ruleSet' => $config['image_parameters']['rule_set'],
         ];
     }
 
     public function validateUserConfiguration($config)
     {
-        $result = [];
-        $result['action'] = isset($config['action']) ? $config['action'] : 'run';
-        if (!isset($config['storage']) || !isset($config['storage']['output'])
-            || !isset($config['storage']['output']['tables']) || !count($config['storage']['output']['tables'])) {
-            throw new Exception('There is no table in output mapping cofnigured');
+        $result = [
+            'kbcProject' => getenv('KBC_PROJECTID'),
+            'action' => isset($config['action']) ? $config['action'] : 'run',
+            'id' => $config['parameters']['id'] //@TODO
+        ];
+        if ($result['action'] == 'run') {
+            /*if (!isset($config['storage']) || !isset($config['storage']['output'])
+                || !isset($config['storage']['output']['tables']) || !count($config['storage']['output']['tables'])) {
+                throw new Exception('There is no table in output mapping configured');
+            }*/
         }
         return $result;
     }

@@ -5,7 +5,6 @@
  * @author Jakub Matejka <jakub@keboola.com>
  */
 
-require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/bootstrap.php';
 
 use Symfony\Component\Console\Application;

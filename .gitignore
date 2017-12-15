@@ -1,6 +1,7 @@
 .idea
 composer.phar
 vendor
+run-dev.sh
 run-test.sh
 data
 build
