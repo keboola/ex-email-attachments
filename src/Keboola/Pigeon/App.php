@@ -7,6 +7,7 @@
 
 namespace Keboola\Pigeon;
 
+use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use Aws\Ses\SesClient;
@@ -17,37 +18,49 @@ class App
 {
     /** @var Temp  */
     protected $temp;
-    /** @var SesClient  */
-    protected $ses;
-    /** @var S3Client  */
-    protected $s3;
+    protected $appConfiguration;
     protected $emailDomain;
     protected $bucketName;
     protected $ruleSetName;
 
     public function __construct($appConfiguration, Temp $temp)
     {
+        $this->appConfiguration = $appConfiguration;
         $this->temp = $temp;
-        $this->ses = new SesClient([
-            'credentials'=> [
-                'key' => $appConfiguration['accessKeyId'],
-                'secret' => $appConfiguration['secretAccessKey'],
-            ],
-            'region' => $appConfiguration['region'],
-            'version' => '2010-12-01',
-        ]);
-        $this->s3 = new S3Client([
-            'credentials'=> [
-                'key' => $appConfiguration['accessKeyId'],
-                'secret' => $appConfiguration['secretAccessKey'],
-            ],
-            'region' => $appConfiguration['region'],
-            'version' => '2006-03-01',
-        ]);
-        $this->emailDomain = $appConfiguration['emailDomain'];
-        $this->bucketName = $appConfiguration['bucket'];
-        $this->ruleSetName = $appConfiguration['ruleSet'];
     }
+
+    protected function getAwsCredentials()
+    {
+        return [
+            'credentials'=> [
+                'key' => $this->appConfiguration['accessKeyId'],
+                'secret' => $this->appConfiguration['secretAccessKey'],
+            ],
+            'region' => $this->appConfiguration['region'],
+        ];
+    }
+
+    protected function initSes()
+    {
+        return new SesClient(array_merge($this->getAwsCredentials(), [
+            'version' => '2010-12-01',
+        ]));
+    }
+
+    protected function initS3()
+    {
+        return new S3Client(array_merge($this->getAwsCredentials(), [
+            'version' => '2006-03-01',
+        ]));
+    }
+
+    protected function initDynamoDb()
+    {
+        return new DynamoDbClient(array_merge($this->getAwsCredentials(), [
+            'version' => '2012-08-10',
+        ]));
+    }
+
 
     public function run($userConfiguration)
     {
@@ -58,6 +71,9 @@ class App
             case 'add':
                 return $this->addAction($userConfiguration);
                 break;
+            case 'list':
+                return $this->listAction($userConfiguration);
+                break;
             default:
                 throw new Exception("Action {$userConfiguration['action']} is not supported");
         }
@@ -66,9 +82,10 @@ class App
     public function runAction($userConfiguration)
     {
         $this->temp->initRunFolder();
+        $s3 = $this->initS3();
         try {
-            $objects = $this->s3->listObjectsV2([
-                'Bucket' => $this->bucketName,
+            $objects = $s3->listObjectsV2([
+                'Bucket' => $this->appConfiguration['bucket'],
                 'Prefix' => "{$userConfiguration['kbcProject']}/{$userConfiguration['id']}/",
             ]);
         } catch (S3Exception $e) {
@@ -83,8 +100,8 @@ class App
         foreach ($objects['Contents'] as $file) {
             if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$userConfiguration['id']}/AMAZON_SES_SETUP_NOTIFICATION") {
                 $tempFile = $this->temp->createTmpFile()->getRealPath();
-                $this->s3->getObject([
-                    'Bucket' => $this->bucketName,
+                $s3->getObject([
+                    'Bucket' => $this->appConfiguration['bucket'],
                     'Key' => $file['Key'],
                     'SaveAs' => $tempFile,
                 ]);
@@ -104,23 +121,46 @@ class App
     public function addAction($userConfiguration)
     {
         $id = uniqid();
-        $email = sprintf('%s-%s@%s', $userConfiguration['kbcProject'], $id, $this->emailDomain);
-        $this->ses->createReceiptRule([
+        $email = sprintf(
+            '%s-%s@%s',
+            $userConfiguration['kbcProject'],
+            $id,
+            $this->appConfiguration['emailDomain']
+        );
+        $ses = $this->initSes();
+        $ses->createReceiptRule([
             'Rule' => [
                 'Name' => "pigeon-{$userConfiguration['kbcProject']}-$id",
                 'Enabled' => true,
                 'Actions' => [
                     [
                         'S3Action' => [
-                            'BucketName' => $this->bucketName,
+                            'BucketName' => $this->appConfiguration['bucket'],
                             'ObjectKeyPrefix' => "{$userConfiguration['kbcProject']}/$id/",
                         ],
                     ],
                 ],
                 'Recipients' => [$email],
             ],
-            'RuleSetName' => $this->ruleSetName,
+            'RuleSetName' => $this->appConfiguration['ruleSet'],
         ]);
         return ['email' => $email];
+    }
+
+    public function listAction($userConfiguration)
+    {
+        $dynamo = $this->initDynamoDb();
+        $result = $dynamo->query([
+            'TableName' => $this->appConfiguration['dynamoTable'],
+            'KeyConditions' => [
+                'IdProject' => [
+                    'AttributeValueList' => [
+                        ['N' => $userConfiguration['kbcProject']]
+                    ],
+                    'ComparisonOperator' => 'EQ'
+                ],
+            ],
+        ]);
+        return (array)$result['Items'];
     }
 }

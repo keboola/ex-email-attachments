@@ -22,5 +22,6 @@ KBC Docker app provisions email mailboxes and monitors them for incoming csv fil
     - `#secret_access_key` - Set from CloudFormation output `UserSecretKey` amd encrypt
     - `region` - e.g. `eu-west-1`
     - `bucket` - Set from CloudFormation output `S3BucketName`
+    - `dynamo_table` - Set from CloudFormation output `DynamoTable`
     - `rule_set` - SES rule set, `default-rule-set` by default
     - `email_domain` - A domain for mailboxes (e.g. `import.test.keboola.com`)

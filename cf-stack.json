@@ -53,13 +53,13 @@
         "TableName": { "Fn::Join" : ["", [{ "Ref": "KeboolaStack" }, "-emails"]] },
         "AttributeDefinitions": [
           {
-            "AttributeName": "id",
-            "AttributeType": "S"
+            "AttributeName": "IdProject",
+            "AttributeType": "N"
           }
         ],
         "KeySchema": [
           {
-            "AttributeName": "id",
+            "AttributeName": "IdProject",
             "KeyType": "HASH"
           }
         ],
@@ -112,6 +112,23 @@
                 }
               ]
             }
+          },
+          {
+            "PolicyName": "DynamoAccess",
+            "PolicyDocument":  {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:*"
+                  ],
+                  "Resource": [
+                    { "Fn::GetAtt" : [ "DynamoTable", "Arn" ] }
+                  ]
+                }
+              ]
+            }
           }
         ]
       }
@@ -125,9 +142,10 @@
   },
   "Outputs": {
     "S3BucketName": {
-      "Value": {
-        "Ref": "S3Bucket"
-      }
+      "Value": { "Ref": "S3Bucket" }
+    },
+    "DynamoTable": {
+      "Value": { "Ref": "DynamoTable" }
     },
     "UserAccessKey" : {
       "Value" : { "Ref" : "IamUserAccessKey" }
