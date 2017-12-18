@@ -7,6 +7,7 @@
 
 namespace Keboola\Pigeon;
 
+use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use Aws\Ses\SesClient;
 use Keboola\Temp\Temp;
@@ -52,7 +53,7 @@ class App
     {
         switch ($userConfiguration['action']) {
             case 'run':
-                $this->runAction($userConfiguration);
+                return $this->runAction($userConfiguration);
                 break;
             case 'add':
                 return $this->addAction($userConfiguration);
@@ -65,10 +66,19 @@ class App
     public function runAction($userConfiguration)
     {
         $this->temp->initRunFolder();
-        $objects = $this->s3->listObjectsV2([
-            'Bucket' => $this->bucketName,
-            'Prefix' => "{$userConfiguration['kbcProject']}/{$userConfiguration['id']}/",
-        ]);
+        try {
+            $objects = $this->s3->listObjectsV2([
+                'Bucket' => $this->bucketName,
+                'Prefix' => "{$userConfiguration['kbcProject']}/{$userConfiguration['id']}/",
+            ]);
+        } catch (S3Exception $e) {
+            if ($e->getAwsErrorCode() != 'AccessDenied') {
+                throw $e;
+            }
+            // If error code is AccessDenied, there probably is not any email yet
+            return;
+        }
+
         $parser = new Parser();
         foreach ($objects['Contents'] as $file) {
             if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$userConfiguration['id']}/AMAZON_SES_SETUP_NOTIFICATION") {

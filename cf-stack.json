@@ -1,0 +1,141 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters" : {
+    "KeboolaStack" : {
+      "Type" : "String",
+      "Description" : "Name of the stack, used for tagging and resources names"
+    }
+  },
+  "Resources": {
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": { "Fn::Join" : ["", [{ "Ref": "KeboolaStack" }, "-emails"]] },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "RemovalRule",
+              "Status": "Enabled",
+              "ExpirationInDays": "30"
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "KeboolaStack",
+            "Value": { "Ref": "KeboolaStack" }
+          }
+        ]
+      }
+    },
+    "S3BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": { "Ref" : "S3Bucket" },
+        "PolicyDocument": {
+          "Statement":[{
+            "Action": ["s3:PutObject"],
+            "Effect": "Allow",
+            "Resource": { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "S3Bucket" }, "/*" ]]},
+            "Principal": {
+              "Service": "ses.amazonaws.com"
+            }
+          }]
+        }
+      },
+      "DependsOn": [
+        "S3Bucket"
+      ]
+    },
+    "DynamoTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": { "Fn::Join" : ["", [{ "Ref": "KeboolaStack" }, "-emails"]] },
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        },
+        "Tags": [
+          {
+            "Key": "KeboolaStack",
+            "Value": { "Ref": "KeboolaStack" }
+          }
+        ]
+      }
+    },
+    "IamUser": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": { "Ref": "KeboolaStack" },
+        "Policies": [
+          {
+            "PolicyName": "SESFullAccess",
+            "PolicyDocument":  {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "S3BucketReadAccess",
+            "PolicyDocument":  {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:*"
+                  ],
+                  "Resource": [
+                    { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "S3Bucket" } ]]},
+                    { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "S3Bucket" }, "/*" ]]}
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "IamUserAccessKey": {
+      "Type" : "AWS::IAM::AccessKey",
+      "Properties" : {
+        "UserName" : { "Ref" : "IamUser" }
+      }
+    }
+  },
+  "Outputs": {
+    "S3BucketName": {
+      "Value": {
+        "Ref": "S3Bucket"
+      }
+    },
+    "UserAccessKey" : {
+      "Value" : { "Ref" : "IamUserAccessKey" }
+    },
+    "UserSecretKey" : {
+      "Value" : {
+        "Fn::GetAtt" : [ "IamUserAccessKey", "SecretAccessKey" ]
+      }
+    }
+  }
+}
