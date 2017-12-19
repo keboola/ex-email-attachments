@@ -10,6 +10,7 @@ use Keboola\Temp\Temp;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Serializer\Encoder\JsonDecode;
+use Symfony\Component\Serializer\Encoder\JsonEncode;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -47,7 +48,10 @@ class RunCommand extends Command
             $userConfiguration['outputPath'] = $outputPath;
 
             $app = new App($appConfiguration, new Temp());
-            $consoleOutput->writeln($app->run($userConfiguration));
+            $result = $app->run($userConfiguration);
+            $jsonEncode = new JsonEncode();
+            $consoleOutput->writeln(is_array($result)
+                ? $jsonEncode->encode($result, JsonEncoder::FORMAT) : $result);
 
             return 0;
         } catch (Exception $e) {

@@ -53,14 +53,22 @@
         "TableName": { "Fn::Join" : ["", [{ "Ref": "KeboolaStack" }, "-emails"]] },
         "AttributeDefinitions": [
           {
-            "AttributeName": "IdProject",
+            "AttributeName": "Project",
             "AttributeType": "N"
+          },
+          {
+            "AttributeName": "Email",
+            "AttributeType": "S"
           }
         ],
         "KeySchema": [
           {
-            "AttributeName": "IdProject",
+            "AttributeName": "Project",
             "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "Email",
+            "KeyType": "RANGE"
           }
         ],
         "ProvisionedThroughput": {

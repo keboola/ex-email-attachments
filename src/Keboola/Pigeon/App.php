@@ -144,6 +144,14 @@ class App
             ],
             'RuleSetName' => $this->appConfiguration['ruleSet'],
         ]);
+        $dynamo = $this->initDynamoDb();
+        $dynamo->putItem([
+            'TableName' => $this->appConfiguration['dynamoTable'],
+            'Item' => [
+                'Project' => ['N' => $userConfiguration['kbcProject']],
+                'Email' => ['S' => $email],
+            ],
+        ]);
         return ['email' => $email];
     }
 
@@ -153,7 +161,7 @@ class App
         $result = $dynamo->query([
             'TableName' => $this->appConfiguration['dynamoTable'],
             'KeyConditions' => [
-                'IdProject' => [
+                'Project' => [
                     'AttributeValueList' => [
                         ['N' => $userConfiguration['kbcProject']]
                     ],
@@ -161,6 +169,8 @@ class App
                 ],
             ],
         ]);
-        return (array)$result['Items'];
+        return array_map(function($row) {
+            return $row['Email']['S'];
+        }, $result['Items']);
     }
 }
