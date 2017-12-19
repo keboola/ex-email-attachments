@@ -70,7 +70,7 @@ class RunCommand extends Command
     public function validateAppConfiguration($config)
     {
         $required = ['access_key_id', '#secret_access_key', 'region', 'bucket', 'email_domain', 'rule_set',
-            'dynamo_table'];
+            'dynamo_table', 'stack_name'];
         foreach ($required as $input) {
             if (!isset($config['image_parameters'][$input])) {
                 throw new \Exception("$input is missing from image parameters");
@@ -84,6 +84,7 @@ class RunCommand extends Command
             'emailDomain' => $config['image_parameters']['email_domain'],
             'ruleSet' => $config['image_parameters']['rule_set'],
             'dynamoTable' => $config['image_parameters']['dynamo_table'],
+            'stackName' => $config['image_parameters']['stack_name'],
         ];
     }
 

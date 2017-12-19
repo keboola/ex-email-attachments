@@ -92,10 +92,11 @@ class App
             if ($e->getAwsErrorCode() != 'AccessDenied') {
                 throw $e;
             }
-            // If error code is AccessDenied, there probably is not any email yet
-            return;
+            // If error code is AccessDenied, there probably is not any email yet and so the folder does not exist
+            return ['processedAttachments' => 0];
         }
 
+        $processedAttachments = 0;
         $parser = new Parser();
         foreach ($objects['Contents'] as $file) {
             if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$userConfiguration['id']}/AMAZON_SES_SETUP_NOTIFICATION") {
@@ -112,10 +113,12 @@ class App
                     foreach ($attachments as $attachment) {
                         echo file_get_contents($this->temp->getTmpFolder() . '/' . $attachment->getFilename());
                         //@TODO
+                        $processedAttachments++;
                     }
                 }
             }
         }
+        return ['processedAttachments' => $processedAttachments];
     }
 
     public function addAction($userConfiguration)
@@ -130,7 +133,7 @@ class App
         $ses = $this->initSes();
         $ses->createReceiptRule([
             'Rule' => [
-                'Name' => "pigeon-{$userConfiguration['kbcProject']}-$id",
+                'Name' => "{$this->appConfiguration['stackName']}-{$userConfiguration['kbcProject']}-$id",
                 'Enabled' => true,
                 'Actions' => [
                     [
