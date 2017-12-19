@@ -11,24 +11,10 @@ before_script:
   - docker-compose build
   - docker-compose run --rm dev composer install
   - docker-compose run --rm dev /code/vendor/bin/phpcs --standard=psr2 -n --ignore=vendor --extensions=php .
-  - docker-compose run --rm dev /code/vendor/bin/phpstan analyse --level=7 ./src ./tests
+  - docker-compose run --rm dev /code/vendor/bin/phpstan analyse --level=7 ./src
 
 script:
   - docker-compose run --rm tests
-  - docker-compose run --rm xdebug /code/vendor/bin/phpunit --coverage-clover build/logs/clover.xml
-  - docker-compose run --rm xdebug /code/vendor/bin/test-reporter
-  # push test image to ECR
-  # env requires: KBC_DEVELOPERPORTAL_USERNAME, KBC_DEVELOPERPORTAL_PASSWORD & KBC_DEVELOPERPORTAL_URL,
-  # KBC_DEVELOPERPORTAL_APP and KBC_DEVELOPERPORTAL_VENDOR
-  - docker pull quay.io/keboola/developer-portal-cli-v2:latest
-  - export REPOSITORY=`docker run --rm -e KBC_DEVELOPERPORTAL_USERNAME -e KBC_DEVELOPERPORTAL_PASSWORD -e KBC_DEVELOPERPORTAL_URL quay.io/keboola/developer-portal-cli-v2:latest ecr:get-repository $KBC_DEVELOPERPORTAL_VENDOR $KBC_DEVELOPERPORTAL_APP`
-  - docker tag keboola/docker-demo-app:latest $REPOSITORY:test
-  - eval $(docker run --rm -e KBC_DEVELOPERPORTAL_USERNAME -e KBC_DEVELOPERPORTAL_PASSWORD -e KBC_DEVELOPERPORTAL_URL quay.io/keboola/developer-portal-cli-v2:latest ecr:get-login $KBC_DEVELOPERPORTAL_VENDOR $KBC_DEVELOPERPORTAL_APP)
-  - docker push $REPOSITORY:test
-  # Run live test job on new test image
-  # env requires: KBC_STORAGE_TOKEN and KBC_APP_TEST_CONFIG (a token to a test project where the app has a configuration)
-  - docker pull quay.io/keboola/syrup-cli:latest
-  - docker run --rm -e KBC_STORAGE_TOKEN quay.io/keboola/syrup-cli:latest run-job $KBC_DEVELOPERPORTAL_APP $KBC_APP_TEST_CONFIG test
 
 after_success:
   - docker images

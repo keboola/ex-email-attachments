@@ -1,6 +1,4 @@
 <?php
-// Define path to application directory
-define('ROOT_PATH', __DIR__);
 
 ini_set('display_errors', true);
 
@@ -13,4 +11,4 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });
 
-require_once ROOT_PATH . '/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';

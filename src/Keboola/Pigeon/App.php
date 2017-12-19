@@ -172,7 +172,7 @@ class App
                 ],
             ],
         ]);
-        return array_map(function($row) {
+        return array_map(function ($row) {
             return $row['Email']['S'];
         }, $result['Items']);
     }

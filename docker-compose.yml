@@ -14,6 +14,15 @@ services:
       - ./:/code
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
     entrypoint: /code/vendor/bin/phpunit
+    environment:
+      - ACCESS_KEY_ID
+      - BUCKET
+      - DYNAMO_TABLE
+      - EMAIL_DOMAIN
+      - REGION
+      - RULE_SET
+      - SECRET_ACCESS_KEY
+      - STACK_NAME
 
   dev:
     build: .
@@ -24,17 +33,3 @@ services:
       - ./:/code
     environment:
       - KBC_PROJECTID
-
-  xdebug:
-    image: keboola/pigeon-xdebug
-    build:
-      context: .
-      dockerfile: docker/xdebug/Dockerfile
-    volumes:
-      - ./:/code
-      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
-      - ./docker/xdebug/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
-    environment:
-      - CODECLIMATE_REPO_TOKEN
-      - PHP_IDE_CONFIG
-      - XDEBUG_CONFIG
