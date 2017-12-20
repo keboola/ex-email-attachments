@@ -93,9 +93,15 @@ class RunCommand extends Command
         $result = [
             'kbcProject' => getenv('KBC_PROJECTID'),
             'action' => isset($config['action']) ? $config['action'] : 'run',
-            'id' => $config['parameters']['id'] //@TODO
         ];
         if ($result['action'] == 'run') {
+            $required = ['email'];
+            foreach ($required as $input) {
+                if (!isset($config['parameters'][$input])) {
+                    throw new \Exception("$input is missing from parameters");
+                }
+                $result[$input] = $config['parameters'][$input];
+            }
             /*if (!isset($config['storage']) || !isset($config['storage']['output'])
                 || !isset($config['storage']['output']['tables']) || !count($config['storage']['output']['tables'])) {
                 throw new Exception('There is no table in output mapping configured');

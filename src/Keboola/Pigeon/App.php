@@ -81,12 +81,39 @@ class App
 
     public function runAction($userConfiguration)
     {
+        preg_match("/^\d+-(.+)@{$this->appConfiguration['emailDomain']}/", $userConfiguration['email'], $match);
+        if (count($match) < 2) {
+            throw new Exception('Email address is not configured for the project');
+        }
+        $id = $match[1];
+        $dynamo = $this->initDynamoDb();
+        $result = $dynamo->query([
+            'TableName' => $this->appConfiguration['dynamoTable'],
+            'KeyConditions' => [
+                'Project' => [
+                    'AttributeValueList' => [
+                        ['N' => $userConfiguration['kbcProject']]
+                    ],
+                    'ComparisonOperator' => 'EQ'
+                ],
+                'Email' => [
+                    'AttributeValueList' => [
+                        ['S' => $userConfiguration['email']]
+                    ],
+                    'ComparisonOperator' => 'EQ'
+                ],
+            ],
+        ]);
+        if (!$result['Count']) {
+            throw new Exception('Email address is not configured for the project');
+        }
+
         $this->temp->initRunFolder();
         $s3 = $this->initS3();
         try {
             $objects = $s3->listObjectsV2([
                 'Bucket' => $this->appConfiguration['bucket'],
-                'Prefix' => "{$userConfiguration['kbcProject']}/{$userConfiguration['id']}/",
+                'Prefix' => "{$userConfiguration['kbcProject']}/{$id}/",
             ]);
         } catch (S3Exception $e) {
             if ($e->getAwsErrorCode() != 'AccessDenied') {
@@ -99,7 +126,7 @@ class App
         $processedAttachments = 0;
         $parser = new Parser();
         foreach ($objects['Contents'] as $file) {
-            if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$userConfiguration['id']}/AMAZON_SES_SETUP_NOTIFICATION") {
+            if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$id}/AMAZON_SES_SETUP_NOTIFICATION") {
                 $tempFile = $this->temp->createTmpFile()->getRealPath();
                 $s3->getObject([
                     'Bucket' => $this->appConfiguration['bucket'],

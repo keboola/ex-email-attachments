@@ -14,8 +14,8 @@ class AddTest extends AbstractTest
         $result = $this->app->run(['action' => 'add', 'kbcProject' => $this->project]);
         $this->assertArrayHasKey('email', $result);
         $this->assertStringStartsWith($this->project, $result['email']);
-        $idStart = strlen($this->project) + 1;
-        $id = substr($result['email'], $idStart, strpos($result['email'], '@') - $idStart);
+        preg_match('/^\d+-(.+)@' . EMAIL_DOMAIN . '/', $result['email'], $match);
+        $id = $match[1];
 
         $ruleName = sprintf("%s-%d-%s", STACK_NAME, $this->project, $id);
         $rule = $this->ses->describeReceiptRule(['RuleSetName' => RULE_SET, 'RuleName' => $ruleName]);
