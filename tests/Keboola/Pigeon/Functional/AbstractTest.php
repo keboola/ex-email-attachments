@@ -12,6 +12,7 @@ use Aws\S3\S3Client;
 use Aws\Ses\SesClient;
 use Keboola\Pigeon\App;
 use Keboola\Temp\Temp;
+use Symfony\Component\Filesystem\Filesystem;
 
 abstract class AbstractTest extends \PHPUnit\Framework\TestCase
 {
@@ -53,6 +54,9 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
             'version' => '2006-03-01',
         ]);
         $this->project = (string)rand(1100, 1200);
+
+        $dataPath = '/data/out/tables';
+        (new Filesystem())->mkdir([$dataPath]);
         $this->app = new App([
             'accessKeyId' => ACCESS_KEY_ID,
             'secretAccessKey' => SECRET_ACCESS_KEY,
@@ -62,6 +66,7 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
             'ruleSet' => RULE_SET,
             'dynamoTable' => DYNAMO_TABLE,
             'stackName' => STACK_NAME,
+            'outputPath' => $dataPath,
         ], new Temp());
 
         $this->cleanDynamo();

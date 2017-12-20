@@ -138,8 +138,21 @@ class App
                 $attachments = $parser->getAttachments();
                 if (count($attachments) > 0) {
                     foreach ($attachments as $attachment) {
-                        echo file_get_contents($this->temp->getTmpFolder() . '/' . $attachment->getFilename());
-                        //@TODO
+                        $fileName = "{$this->appConfiguration['outputPath']}/{$userConfiguration['table']['source']}";
+                        rename("{$this->temp->getTmpFolder()}/{$attachment->getFilename()}", $fileName);
+                        $manifest = ['destination' => $userConfiguration['table']['destination']];
+                        if (isset($userConfiguration['incremental'])) {
+                            $manifest['incremental'] = (bool)$userConfiguration['incremental'];
+                        }
+                        if (isset($userConfiguration['delimeter'])) {
+                            $manifest['delimeter'] = $userConfiguration['delimeter'];
+                        }
+                        if (isset($userConfiguration['enclosure'])) {
+                            $manifest['enclosure'] = $userConfiguration['enclosure'];
+                        }
+                        if (count($manifest)) {
+                            file_put_contents("$fileName.manifest", json_encode($manifest));
+                        }
                         $processedAttachments++;
                     }
                 }
