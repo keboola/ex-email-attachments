@@ -7,7 +7,7 @@ export REPOSITORY=`docker run --rm \
     quay.io/keboola/developer-portal-cli-v2:latest ecr:get-repository ${KBC_DEVELOPERPORTAL_VENDOR} ${KBC_DEVELOPERPORTAL_APP}`
 echo "KBC_APP_REPOSITORY: $KBC_APP_REPOSITORY"
 echo "REPOSITORY: $REPOSITORY"
-echo "TRAVIS_TAG: $REPOSITORY"
+echo "TRAVIS_TAG: $TRAVIS_TAG"
 docker tag ${KBC_APP_REPOSITORY}:latest ${REPOSITORY}:${TRAVIS_TAG}
 echo "STEP 1"
 docker tag ${KBC_APP_REPOSITORY}:latest ${REPOSITORY}:latest
