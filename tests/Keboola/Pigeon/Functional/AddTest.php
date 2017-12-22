@@ -7,11 +7,17 @@
 
 namespace Keboola\Pigeon\Tests\Functional;
 
+use Keboola\Pigeon\App;
+
 class AddTest extends AbstractTest
 {
     public function testAdd()
     {
-        $result = $this->app->run(['action' => 'add', 'kbcProject' => $this->project]);
+        $result = App::execute(
+            $this->appConfiguration,
+            ['action' => 'add', 'kbcProject' => $this->project],
+            $this->temp
+        );
         $this->assertArrayHasKey('email', $result);
         $this->assertStringStartsWith($this->project, $result['email']);
         preg_match('/^\d+-(.+)@' . EMAIL_DOMAIN . '/', $result['email'], $match);

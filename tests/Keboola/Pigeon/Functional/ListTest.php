@@ -7,6 +7,8 @@
 
 namespace Keboola\Pigeon\Tests\Functional;
 
+use Keboola\Pigeon\App;
+
 class ListTest extends AbstractTest
 {
     public function testList()
@@ -28,7 +30,11 @@ class ListTest extends AbstractTest
             ],
         ]);
 
-        $result = $this->app->run(['action' => 'list', 'kbcProject' => $this->project]);
+        $result = App::execute(
+            $this->appConfiguration,
+            ['action' => 'list', 'kbcProject' => $this->project],
+            $this->temp
+        );
         $this->assertCount(2, $result);
         $this->assertArraySubset([$email1, $email2], $result);
     }

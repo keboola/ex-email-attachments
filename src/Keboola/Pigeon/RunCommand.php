@@ -30,12 +30,7 @@ class RunCommand extends Command
     {
         $dataDirectory = $input->getArgument('data directory');
 
-        $configFile = "$dataDirectory/config.json";
-        if (!file_exists($configFile)) {
-            throw new \Exception("Config file not found at path $configFile");
-        }
-        $jsonDecode = new JsonDecode(true);
-        $config = $jsonDecode->decode(file_get_contents($configFile), JsonEncoder::FORMAT);
+        $config = $this->getConfig($dataDirectory);
 
         try {
             $outputPath = "$dataDirectory/out/tables";
@@ -47,11 +42,8 @@ class RunCommand extends Command
             $userConfiguration = $this->validateUserConfiguration($config);
             $userConfiguration['outputPath'] = $outputPath;
 
-            $app = new App($appConfiguration, new Temp());
-            $result = $app->run($userConfiguration);
-            $jsonEncode = new JsonEncode();
-            $consoleOutput->writeln(is_array($result)
-                ? $jsonEncode->encode($result, JsonEncoder::FORMAT) : $result);
+            $result = App::execute($appConfiguration, $userConfiguration, new Temp());
+            $consoleOutput->writeln(is_array($result) ? json_encode($result) : $result);
 
             return 0;
         } catch (Exception $e) {
@@ -67,24 +59,33 @@ class RunCommand extends Command
         }
     }
 
+    protected function getConfig($dataDirectory)
+    {
+        $configFile = "$dataDirectory/config.json";
+        if (!file_exists($configFile)) {
+            throw new \Exception("Config file not found at path $configFile");
+        }
+        $jsonDecode = new JsonDecode(true);
+        return $jsonDecode->decode(file_get_contents($configFile), JsonEncoder::FORMAT);
+    }
+
     public function validateAppConfiguration($config)
     {
-        $required = ['access_key_id', '#secret_access_key', 'region', 'bucket', 'email_domain', 'rule_set',
-            'dynamo_table', 'stack_name'];
-        foreach ($required as $input) {
-            if (!isset($config['image_parameters'][$input])) {
-                throw new \Exception("$input is missing from image parameters");
-            }
-        }
+        $params = $this->getRequiredParameters(
+            $config,
+            ['access_key_id', '#secret_access_key', 'region', 'bucket', 'email_domain', 'rule_set',
+                'dynamo_table', 'stack_name'],
+            'image_parameters'
+        );
         return [
-            'accessKeyId' => $config['image_parameters']['access_key_id'],
-            'secretAccessKey' => $config['image_parameters']['#secret_access_key'],
-            'region' => $config['image_parameters']['region'],
-            'bucket' => $config['image_parameters']['bucket'],
-            'emailDomain' => $config['image_parameters']['email_domain'],
-            'ruleSet' => $config['image_parameters']['rule_set'],
-            'dynamoTable' => $config['image_parameters']['dynamo_table'],
-            'stackName' => $config['image_parameters']['stack_name'],
+            'accessKeyId' => $params['access_key_id'],
+            'secretAccessKey' => $params['#secret_access_key'],
+            'region' => $params['region'],
+            'bucket' => $params['bucket'],
+            'emailDomain' => $params['email_domain'],
+            'ruleSet' => $params['rule_set'],
+            'dynamoTable' => $params['dynamo_table'],
+            'stackName' => $params['stack_name'],
         ];
     }
 
@@ -95,28 +96,48 @@ class RunCommand extends Command
             'action' => isset($config['action']) ? $config['action'] : 'run',
         ];
         if ($result['action'] == 'run') {
-            $required = ['email'];
-            foreach ($required as $input) {
-                if (!isset($config['parameters'][$input])) {
-                    throw new \Exception("$input is missing from parameters");
-                }
-                $result[$input] = $config['parameters'][$input];
-            }
-            $optional = ['incremental', 'enclosure', 'delimiter'];
-            foreach ($optional as $input) {
-                if (isset($config['parameters'][$input])) {
-                    $result[$input] = $config['parameters'][$input];
-                }
-            }
-            if (!isset($config['storage']) || !isset($config['storage']['output'])
-                || !isset($config['storage']['output']['tables']) || !count($config['storage']['output']['tables'])) {
-                throw new Exception('There is no table in output mapping configured');
-            }
-            if (count($config['storage']['output']['tables']) > 1) {
-                throw new Exception('There can be only one table in output mapping');
-            }
-            $result['table'] = $config['storage']['output']['tables'][0];
+            $result = array_merge($result, $this->getRequiredParameters($config, ['email'], 'parameters'));
+            $result = array_merge(
+                $result,
+                $this->getOptionalParameters($config, ['incremental', 'enclosure', 'delimiter'], 'parameters')
+            );
+            $result['table'] = $this->getTableConfiguration($config);
         }
         return $result;
+    }
+
+    protected function getRequiredParameters($config, $required, $field)
+    {
+        $result = [];
+        foreach ($required as $input) {
+            if (!isset($config[$field][$input])) {
+                throw new \Exception("$input is missing from $field");
+            }
+            $result[$input] = $config[$field][$input];
+        }
+        return $result;
+    }
+
+    protected function getOptionalParameters($config, $optional, $field)
+    {
+        $result = [];
+        foreach ($optional as $input) {
+            if (isset($config[$field][$input])) {
+                $result[$input] = $config[$field][$input];
+            }
+        }
+        return $result;
+    }
+
+    protected function getTableConfiguration($config)
+    {
+        if (!isset($config['storage']) || !isset($config['storage']['output'])
+            || !isset($config['storage']['output']['tables']) || !count($config['storage']['output']['tables'])) {
+            throw new Exception('There is no table in output mapping configured');
+        }
+        if (count($config['storage']['output']['tables']) > 1) {
+            throw new Exception('There can be only one table in output mapping');
+        }
+        return $config['storage']['output']['tables'][0];
     }
 }

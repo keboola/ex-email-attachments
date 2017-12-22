@@ -21,6 +21,7 @@ ratings:
   paths:
   - "**.php"
 exclude_paths:
+- .idea/**
 - .git/**
 - src/run.php
 - tests/**

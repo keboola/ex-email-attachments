@@ -10,7 +10,6 @@ namespace Keboola\Pigeon\Tests\Functional;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\S3Client;
 use Aws\Ses\SesClient;
-use Keboola\Pigeon\App;
 use Keboola\Temp\Temp;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -24,8 +23,9 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
     protected $ses;
     /** @var S3Client */
     protected $s3;
-    /** @var App */
-    protected $app;
+    protected $appConfiguration;
+    /** @var Temp */
+    protected $temp;
 
     protected function setUp()
     {
@@ -58,7 +58,7 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
 
         $this->outputPath = '/data/out/tables';
         (new Filesystem())->mkdir([$this->outputPath]);
-        $this->app = new App([
+        $this->appConfiguration = [
             'accessKeyId' => ACCESS_KEY_ID,
             'secretAccessKey' => SECRET_ACCESS_KEY,
             'region' => REGION,
@@ -67,7 +67,8 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
             'ruleSet' => RULE_SET,
             'dynamoTable' => DYNAMO_TABLE,
             'stackName' => STACK_NAME,
-        ], new Temp());
+        ];
+        $this->temp = new Temp();
 
         $this->cleanDynamo();
         $this->cleanS3();

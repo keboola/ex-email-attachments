@@ -7,6 +7,7 @@
 
 namespace Keboola\Pigeon\Tests\Functional;
 
+use Keboola\Pigeon\App;
 use Keboola\Pigeon\Exception;
 
 class RunTest extends AbstractTest
@@ -14,7 +15,11 @@ class RunTest extends AbstractTest
     public function testRunInvalidEmail()
     {
         $this->expectException(Exception::class);
-        $this->app->run(['action' => 'run', 'kbcProject' => $this->project, 'email' => uniqid()]);
+        App::execute(
+            $this->appConfiguration,
+            ['action' => 'run', 'kbcProject' => $this->project, 'email' => uniqid()],
+            $this->temp
+        );
     }
 
     public function testRunOk()
@@ -34,19 +39,23 @@ class RunTest extends AbstractTest
             ],
         ]);
 
-        $result = $this->app->run([
-            'action' => 'run',
-            'kbcProject' => $this->project,
-            'outputPath' => $this->outputPath,
-            'email' => $email,
-            'incremental' => true,
-            'enclosure' => '"',
-            'delimiter' => ',',
-            'table' => [
-                'source' => 'out.c-main.data.csv',
-                'destination' => 'out.c-main.data',
+        $result = App::execute(
+            $this->appConfiguration,
+            [
+                'action' => 'run',
+                'kbcProject' => $this->project,
+                'outputPath' => $this->outputPath,
+                'email' => $email,
+                'incremental' => true,
+                'enclosure' => '"',
+                'delimiter' => ',',
+                'table' => [
+                    'source' => 'out.c-main.data.csv',
+                    'destination' => 'out.c-main.data',
+                ],
             ],
-        ]);
+            $this->temp
+        );
         $dataFolder = '/data/out/tables';
         $this->assertArrayHasKey('processedAttachments', $result);
         $this->assertEquals(1, $result['processedAttachments']);
