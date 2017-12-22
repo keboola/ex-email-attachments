@@ -14,7 +14,8 @@ RUN curl -sS https://getcomposer.org/installer | php \
 
 COPY . /code/
 COPY ./docker/php/php.ini /usr/local/etc/php/php.ini
+WORKDIR /code
 
 RUN composer install
 
-CMD php /code/src/run.php run /code/data
+CMD php ./src/run.php run /data
