@@ -102,7 +102,7 @@ class RunCommand extends Command
                 }
                 $result[$input] = $config['parameters'][$input];
             }
-            $optional = ['incremental', 'enclosure', 'delimeter'];
+            $optional = ['incremental', 'enclosure', 'delimiter'];
             foreach ($optional as $input) {
                 if (isset($config['parameters'][$input])) {
                     $result[$input] = $config['parameters'][$input];

@@ -85,7 +85,7 @@ class App
         if (count($match) < 2) {
             throw new Exception('Email address is not configured for the project');
         }
-        $id = $match[1];
+        $emailId = $match[1];
         $dynamo = $this->initDynamoDb();
         $result = $dynamo->query([
             'TableName' => $this->appConfiguration['dynamoTable'],
@@ -113,7 +113,7 @@ class App
         try {
             $objects = $s3Client->listObjectsV2([
                 'Bucket' => $this->appConfiguration['bucket'],
-                'Prefix' => "{$userConfiguration['kbcProject']}/{$id}/",
+                'Prefix' => "{$userConfiguration['kbcProject']}/{$emailId}/",
             ]);
         } catch (S3Exception $e) {
             if ($e->getAwsErrorCode() != 'AccessDenied') {
@@ -126,7 +126,7 @@ class App
         $processedAttachments = 0;
         $parser = new Parser();
         foreach ($objects['Contents'] as $file) {
-            if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$id}/AMAZON_SES_SETUP_NOTIFICATION") {
+            if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$emailId}/AMAZON_SES_SETUP_NOTIFICATION") {
                 $tempFile = $this->temp->createTmpFile()->getRealPath();
                 $s3Client->getObject([
                     'Bucket' => $this->appConfiguration['bucket'],
@@ -144,10 +144,10 @@ class App
                         if (isset($userConfiguration['incremental'])) {
                             $manifest['incremental'] = (bool)$userConfiguration['incremental'];
                         }
-                        if (isset($userConfiguration['delimeter'])) {
-                            $manifest['delimeter'] = $userConfiguration['delimeter'];
+                        if (!empty($userConfiguration['delimiter'])) {
+                            $manifest['delimiter'] = $userConfiguration['delimiter'];
                         }
-                        if (isset($userConfiguration['enclosure'])) {
+                        if (!empty($userConfiguration['enclosure'])) {
                             $manifest['enclosure'] = $userConfiguration['enclosure'];
                         }
                         if (count($manifest)) {

@@ -41,7 +41,7 @@ class RunTest extends AbstractTest
             'email' => $email,
             'incremental' => true,
             'enclosure' => '"',
-            'delimeter' => ',',
+            'delimiter' => ',',
             'table' => [
                 'source' => 'out.c-main.data.csv',
                 'destination' => 'out.c-main.data',
@@ -59,9 +59,9 @@ class RunTest extends AbstractTest
         $manifest = json_decode(file_get_contents("$dataFolder/out.c-main.data.csv.manifest"), true);
         $this->assertArrayHasKey('incremental', $manifest);
         $this->assertArrayHasKey('enclosure', $manifest);
-        $this->assertArrayHasKey('delimeter', $manifest);
+        $this->assertArrayHasKey('delimiter', $manifest);
         $this->assertEquals(true, $manifest['incremental']);
         $this->assertEquals('"', $manifest['enclosure']);
-        $this->assertEquals(',', $manifest['delimeter']);
+        $this->assertEquals(',', $manifest['delimiter']);
     }
 }
