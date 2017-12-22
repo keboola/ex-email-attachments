@@ -37,6 +37,7 @@ class RunTest extends AbstractTest
         $result = $this->app->run([
             'action' => 'run',
             'kbcProject' => $this->project,
+            'outputPath' => $this->outputPath,
             'email' => $email,
             'incremental' => true,
             'enclosure' => '"',

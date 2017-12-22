@@ -17,6 +17,7 @@ use Symfony\Component\Filesystem\Filesystem;
 abstract class AbstractTest extends \PHPUnit\Framework\TestCase
 {
     protected $project;
+    protected $outputPath;
     /** @var DynamoDbClient */
     protected $dynamo;
     /** @var SesClient */
@@ -55,8 +56,8 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
         ]);
         $this->project = (string)rand(1100, 1200);
 
-        $dataPath = '/data/out/tables';
-        (new Filesystem())->mkdir([$dataPath]);
+        $this->outputPath = '/data/out/tables';
+        (new Filesystem())->mkdir([$this->outputPath]);
         $this->app = new App([
             'accessKeyId' => ACCESS_KEY_ID,
             'secretAccessKey' => SECRET_ACCESS_KEY,
@@ -66,7 +67,6 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
             'ruleSet' => RULE_SET,
             'dynamoTable' => DYNAMO_TABLE,
             'stackName' => STACK_NAME,
-            'outputPath' => $dataPath,
         ], new Temp());
 
         $this->cleanDynamo();

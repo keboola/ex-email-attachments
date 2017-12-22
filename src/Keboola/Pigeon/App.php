@@ -109,9 +109,9 @@ class App
         }
 
         $this->temp->initRunFolder();
-        $s3 = $this->initS3();
+        $s3Client = $this->initS3();
         try {
-            $objects = $s3->listObjectsV2([
+            $objects = $s3Client->listObjectsV2([
                 'Bucket' => $this->appConfiguration['bucket'],
                 'Prefix' => "{$userConfiguration['kbcProject']}/{$id}/",
             ]);
@@ -128,7 +128,7 @@ class App
         foreach ($objects['Contents'] as $file) {
             if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$id}/AMAZON_SES_SETUP_NOTIFICATION") {
                 $tempFile = $this->temp->createTmpFile()->getRealPath();
-                $s3->getObject([
+                $s3Client->getObject([
                     'Bucket' => $this->appConfiguration['bucket'],
                     'Key' => $file['Key'],
                     'SaveAs' => $tempFile,
@@ -138,7 +138,7 @@ class App
                 $attachments = $parser->getAttachments();
                 if (count($attachments) > 0) {
                     foreach ($attachments as $attachment) {
-                        $fileName = "{$this->appConfiguration['outputPath']}/{$userConfiguration['table']['source']}";
+                        $fileName = "{$userConfiguration['outputPath']}/{$userConfiguration['table']['source']}";
                         rename("{$this->temp->getTmpFolder()}/{$attachment->getFilename()}", $fileName);
                         $manifest = ['destination' => $userConfiguration['table']['destination']];
                         if (isset($userConfiguration['incremental'])) {
@@ -163,23 +163,23 @@ class App
 
     public function addAction($userConfiguration)
     {
-        $id = uniqid();
+        $emailId = uniqid();
         $email = sprintf(
             '%s-%s@%s',
             $userConfiguration['kbcProject'],
-            $id,
+            $emailId,
             $this->appConfiguration['emailDomain']
         );
         $ses = $this->initSes();
         $ses->createReceiptRule([
             'Rule' => [
-                'Name' => "{$this->appConfiguration['stackName']}-{$userConfiguration['kbcProject']}-$id",
+                'Name' => "{$this->appConfiguration['stackName']}-{$userConfiguration['kbcProject']}-$emailId",
                 'Enabled' => true,
                 'Actions' => [
                     [
                         'S3Action' => [
                             'BucketName' => $this->appConfiguration['bucket'],
-                            'ObjectKeyPrefix' => "{$userConfiguration['kbcProject']}/$id/",
+                            'ObjectKeyPrefix' => "{$userConfiguration['kbcProject']}/$emailId/",
                         ],
                     ],
                 ],
