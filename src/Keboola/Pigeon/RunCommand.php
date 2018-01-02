@@ -10,7 +10,6 @@ use Keboola\Temp\Temp;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Serializer\Encoder\JsonDecode;
-use Symfony\Component\Serializer\Encoder\JsonEncode;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -29,7 +28,6 @@ class RunCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $consoleOutput)
     {
         $dataDirectory = $input->getArgument('data directory');
-
         $config = $this->getConfig($dataDirectory);
 
         try {
@@ -37,13 +35,15 @@ class RunCommand extends Command
             (new Filesystem())->mkdir([$outputPath]);
 
             $appConfiguration = $this->validateAppConfiguration($config);
-            $appConfiguration['output'] = $consoleOutput;
 
             $userConfiguration = $this->validateUserConfiguration($config);
             $userConfiguration['outputPath'] = $outputPath;
+            $userConfiguration['state'] = $this->getState($dataDirectory);
 
             $result = App::execute($appConfiguration, $userConfiguration, new Temp());
-            $consoleOutput->writeln(is_array($result) ? json_encode($result) : $result);
+            $jsonEncode = new \Symfony\Component\Serializer\Encoder\JsonEncode();
+            $consoleOutput->writeln(is_array($result)
+                ? $jsonEncode->encode($result, JsonEncoder::FORMAT) : $result);
 
             return 0;
         } catch (Exception $e) {
@@ -67,6 +67,16 @@ class RunCommand extends Command
         }
         $jsonDecode = new JsonDecode(true);
         return $jsonDecode->decode(file_get_contents($configFile), JsonEncoder::FORMAT);
+    }
+
+    protected function getState($dataDirectory)
+    {
+        $inputStateFile = "$dataDirectory/in/state.json";
+        if (file_exists($inputStateFile)) {
+            $jsonDecode = new JsonDecode(true);
+            return $jsonDecode->decode(file_get_contents($inputStateFile), JsonEncoder::FORMAT);
+        }
+        return [];
     }
 
     public function validateAppConfiguration($config)

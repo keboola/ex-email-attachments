@@ -7,41 +7,69 @@
 
 namespace Keboola\Pigeon\Action;
 
+use Aws\Api\DateTimeResult;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use Keboola\Pigeon\Exception;
 use PhpMimeMailParser\Attachment;
 use PhpMimeMailParser\Parser;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
 
 class RunAction extends AbstractAction
 {
     /** @var S3Client */
     protected $s3Client;
+    protected $lastTimestamp;
 
     public function execute($userConfiguration)
     {
         $emailId = $this->getEmailIdFromConfiguration($userConfiguration);
         $this->checkDbRecord($userConfiguration);
 
+        $this->lastTimestamp = isset($userConfiguration['state']['lastDownloadedFileTimestamp'])
+            ? $userConfiguration['state']['lastDownloadedFileTimestamp'] : 0;
+
         $this->temp->initRunFolder();
         $this->s3Client = $this->initS3();
 
-        $processedAttachments = 0;
-        foreach ($this->listS3Files($userConfiguration['kbcProject'], $emailId) as $file) {
-            if ($file['Key'] != "{$userConfiguration['kbcProject']}/{$emailId}/AMAZON_SES_SETUP_NOTIFICATION") {
-                $processedAttachments += $this->getS3File($file['Key'], $userConfiguration);
+        $filesToDownload = $this->listS3Files($userConfiguration['kbcProject'], $emailId);
+
+        // Filter out processed files
+        $filesToDownload = array_filter($filesToDownload, function ($fileToDownload) {
+            /** @var DateTimeResult $lastModified */
+            if ($fileToDownload["timestamp"] > $this->lastTimestamp) {
+                return true;
             }
+            return false;
+        });
+
+        $processed = 0;
+        foreach ($filesToDownload as $fileToDownload) {
+            $processed += $this->getS3File($fileToDownload['key'], $fileToDownload['timestamp'], $userConfiguration);
         }
-        return ['processedAttachments' => $processedAttachments];
+        $this->saveState($userConfiguration);
+        return ['processedAttachments' => $processed];
     }
 
     protected function listS3Files($kbcProject, $emailId)
     {
         try {
-            return $this->s3Client->listObjectsV2([
+            $objects = $this->s3Client->getIterator('ListObjects', [
                 'Bucket' => $this->appConfiguration['bucket'],
                 'Prefix' => "{$kbcProject}/{$emailId}/",
-            ])['Contents'];
+            ]);
+            $filesToDownload = [];
+            foreach ($objects as $object) {
+                if ($object['Key'] === "{$kbcProject}/{$emailId}/AMAZON_SES_SETUP_NOTIFICATION") {
+                    continue;
+                }
+                /** @noinspection PhpUndefinedMethodInspection */
+                $filesToDownload[] = [
+                    'timestamp' => $object['LastModified']->format('U'),
+                    'key' => $object['Key'],
+                ];
+            }
+            return $filesToDownload;
         } catch (S3Exception $e) {
             if ($e->getAwsErrorCode() != 'AccessDenied') {
                 throw $e;
@@ -51,7 +79,7 @@ class RunAction extends AbstractAction
         }
     }
 
-    public function getS3File($fileKey, $userConfiguration)
+    public function getS3File($fileKey, $timestamp, $userConfiguration)
     {
         $processedAttachments = 0;
         $parser = new Parser();
@@ -70,10 +98,7 @@ class RunAction extends AbstractAction
                 $processedAttachments++;
             }
         }
-        $this->s3Client->deleteObject([
-            'Bucket' => $this->appConfiguration['bucket'],
-            'Key' => $fileKey,
-        ]);
+        $this->lastTimestamp = max($this->lastTimestamp, $timestamp);
         return $processedAttachments;
     }
 
@@ -125,8 +150,16 @@ class RunAction extends AbstractAction
         if (!empty($userConfiguration['enclosure'])) {
             $manifest['enclosure'] = $userConfiguration['enclosure'];
         }
-        if (count($manifest)) {
-            file_put_contents("$fileName.manifest", json_encode($manifest));
-        }
+        file_put_contents("$fileName.manifest", json_encode($manifest));
+    }
+
+    protected function saveState($userConfiguration)
+    {
+        $outputStateFile = "{$userConfiguration['outputPath']}/../state.json";
+        $jsonEncode = new \Symfony\Component\Serializer\Encoder\JsonEncode();
+        file_put_contents($outputStateFile, $jsonEncode->encode(
+            ['lastDownloadedFileTimestamp' => $this->lastTimestamp],
+            JsonEncoder::FORMAT
+        ));
     }
 }

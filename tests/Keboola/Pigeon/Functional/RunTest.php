@@ -28,9 +28,20 @@ class RunTest extends AbstractTest
         $email = "{$this->project}-{$id}@" . EMAIL_DOMAIN;
         $this->s3->putObject([
             'Bucket' => BUCKET,
+            'Key' => "{$this->project}/$id/{$id}0",
+            'SourceFile' => __DIR__ . '/email',
+        ]);
+        sleep(2);
+        $this->s3->putObject([
+            'Bucket' => BUCKET,
             'Key' => "{$this->project}/$id/$id",
             'SourceFile' => __DIR__ . '/email',
         ]);
+        $object = $this->s3->headObject([
+            'Bucket' => BUCKET,
+            'Key' => "{$this->project}/$id/$id",
+        ]);
+        $lastDownloadedFileTimestamp = $object['LastModified']->format('U') - 1;
         $this->dynamo->putItem([
             'TableName' => DYNAMO_TABLE,
             'Item' => [
@@ -53,6 +64,7 @@ class RunTest extends AbstractTest
                     'source' => 'out.c-main.data.csv',
                     'destination' => 'out.c-main.data',
                 ],
+                'state' => ['lastDownloadedFileTimestamp' => $lastDownloadedFileTimestamp],
             ],
             $this->temp
         );
