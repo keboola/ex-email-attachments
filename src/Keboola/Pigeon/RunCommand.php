@@ -111,7 +111,6 @@ class RunCommand extends Command
                 $result,
                 $this->getOptionalParameters($config, ['incremental', 'enclosure', 'delimiter'], 'parameters')
             );
-            $result['table'] = $this->getTableConfiguration($config);
         }
         return $result;
     }
@@ -137,17 +136,5 @@ class RunCommand extends Command
             }
         }
         return $result;
-    }
-
-    protected function getTableConfiguration($config)
-    {
-        if (!isset($config['storage']) || !isset($config['storage']['output'])
-            || !isset($config['storage']['output']['tables']) || !count($config['storage']['output']['tables'])) {
-            throw new Exception('There is no table in output mapping configured');
-        }
-        if (count($config['storage']['output']['tables']) > 1) {
-            throw new Exception('There can be only one table in output mapping');
-        }
-        return $config['storage']['output']['tables'][0];
     }
 }

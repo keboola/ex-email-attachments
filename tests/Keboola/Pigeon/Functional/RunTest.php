@@ -60,10 +60,6 @@ class RunTest extends AbstractTest
                 'incremental' => true,
                 'enclosure' => '"',
                 'delimiter' => ',',
-                'table' => [
-                    'source' => 'out.c-main.data.csv',
-                    'destination' => 'out.c-main.data',
-                ],
                 'state' => ['lastDownloadedFileTimestamp' => $lastDownloadedFileTimestamp],
             ],
             $this->temp
@@ -72,12 +68,12 @@ class RunTest extends AbstractTest
         $this->assertArrayHasKey('processedAttachments', $result);
         $this->assertEquals(1, $result['processedAttachments']);
         $this->assertDirectoryExists($dataFolder);
-        $this->assertFileExists("$dataFolder/out.c-main.data.csv");
-        $csv = file("$dataFolder/out.c-main.data.csv");
+        $this->assertFileExists("$dataFolder/data.csv");
+        $csv = file("$dataFolder/data.csv");
         $this->assertCount(6, $csv);
         $this->assertEquals('"id","name","order"', trim($csv[0]));
-        $this->assertFileExists("$dataFolder/out.c-main.data.csv.manifest");
-        $manifest = json_decode(file_get_contents("$dataFolder/out.c-main.data.csv.manifest"), true);
+        $this->assertFileExists("$dataFolder/data.csv.manifest");
+        $manifest = json_decode(file_get_contents("$dataFolder/data.csv.manifest"), true);
         $this->assertArrayHasKey('incremental', $manifest);
         $this->assertArrayHasKey('enclosure', $manifest);
         $this->assertArrayHasKey('delimiter', $manifest);

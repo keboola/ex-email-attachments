@@ -138,9 +138,9 @@ class RunAction extends AbstractAction
 
     protected function saveFile($userConfiguration, Attachment $attachment)
     {
-        $fileName = "{$userConfiguration['outputPath']}/{$userConfiguration['table']['source']}";
+        $fileName = "{$userConfiguration['outputPath']}/data.csv";
         rename("{$this->temp->getTmpFolder()}/{$attachment->getFilename()}", $fileName);
-        $manifest = ['destination' => $userConfiguration['table']['destination']];
+        $manifest = [];
         if (isset($userConfiguration['incremental'])) {
             $manifest['incremental'] = (bool)$userConfiguration['incremental'];
         }
@@ -150,7 +150,9 @@ class RunAction extends AbstractAction
         if (!empty($userConfiguration['enclosure'])) {
             $manifest['enclosure'] = $userConfiguration['enclosure'];
         }
-        file_put_contents("$fileName.manifest", json_encode($manifest));
+        if ($manifest) {
+            file_put_contents("$fileName.manifest", json_encode($manifest));
+        }
     }
 
     protected function saveState($userConfiguration)
