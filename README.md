@@ -5,6 +5,10 @@ KBC Docker app provisions email mailboxes and monitors them for incoming csv fil
 
 [![Build Status](https://travis-ci.org/keboola/pigeon.svg)](https://travis-ci.org/keboola/pigeon) [![Code Climate](https://codeclimate.com/github/keboola/pigeon/badges/gpa.svg)](https://codeclimate.com/github/keboola/pigeon)
 
+## Notice
+
+The extractor saves timestamp of last processed email to know where to start in the next run. Potentially, it may bring a problem in a moment when two emails are delivered in the same second and the extractor processes only one of them and ends. Then, in its next run, it will skip the other email and won't process it at all.
+
 ## Configuration
 
 - **parameters**:
