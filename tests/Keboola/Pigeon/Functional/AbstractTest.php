@@ -103,7 +103,7 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
                             'DeleteRequest' => [
                                 'Key' => [
                                     'Project' => ['N' => $this->project],
-                                    'Email' => ['S' => $row['Email']['S']],
+                                    'Config' => ['S' => $row['Config']['S']],
                                 ],
                             ],
                         ];

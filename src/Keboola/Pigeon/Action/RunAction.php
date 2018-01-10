@@ -23,8 +23,8 @@ class RunAction extends AbstractAction
 
     public function execute($userConfiguration)
     {
-        $emailId = $this->getEmailIdFromConfiguration($userConfiguration);
-        $this->checkDbRecord($userConfiguration);
+        $dynamo = $this->initDynamoDb();
+        $email = $this->getDbRecord($dynamo, $userConfiguration['kbcProject'], $userConfiguration['config']);
 
         $this->lastTimestamp = isset($userConfiguration['state']['lastDownloadedFileTimestamp'])
             ? $userConfiguration['state']['lastDownloadedFileTimestamp'] : 0;
@@ -32,7 +32,7 @@ class RunAction extends AbstractAction
         $this->temp->initRunFolder();
         $this->s3Client = $this->initS3();
 
-        $filesToDownload = $this->listS3Files($userConfiguration['kbcProject'], $emailId);
+        $filesToDownload = $this->listS3Files($userConfiguration['kbcProject'], $userConfiguration['config']);
 
         // Filter out processed files
         $filesToDownload = array_filter($filesToDownload, function ($fileToDownload) {
@@ -45,24 +45,26 @@ class RunAction extends AbstractAction
 
         $processed = 0;
         foreach ($filesToDownload as $fileToDownload) {
-            $processed += $this->getS3File($fileToDownload['key'], $fileToDownload['timestamp'], $userConfiguration);
+            $processed += $this->getS3File(
+                $fileToDownload['key'],
+                $fileToDownload['timestamp'],
+                $userConfiguration,
+                $email
+            );
         }
         $this->saveState($userConfiguration);
         return ['processedAttachments' => $processed];
     }
 
-    protected function listS3Files($kbcProject, $emailId)
+    protected function listS3Files($kbcProject, $config)
     {
         try {
             $objects = $this->s3Client->getIterator('ListObjects', [
                 'Bucket' => $this->appConfiguration['bucket'],
-                'Prefix' => "{$kbcProject}/{$emailId}/",
+                'Prefix' => "{$kbcProject}/{$config}/",
             ]);
             $filesToDownload = [];
             foreach ($objects as $object) {
-                if ($object['Key'] === "{$kbcProject}/{$emailId}/AMAZON_SES_SETUP_NOTIFICATION") {
-                    continue;
-                }
                 /** @noinspection PhpUndefinedMethodInspection */
                 $filesToDownload[] = [
                     'timestamp' => $object['LastModified']->format('U'),
@@ -79,7 +81,7 @@ class RunAction extends AbstractAction
         }
     }
 
-    public function getS3File($fileKey, $timestamp, $userConfiguration)
+    public function getS3File($fileKey, $timestamp, $userConfiguration, $email)
     {
         $processedAttachments = 0;
         $parser = new Parser();
@@ -91,6 +93,10 @@ class RunAction extends AbstractAction
         ]);
         $parser->setPath($tempFile);
         $parser->saveAttachments($this->temp->getTmpFolder() . '/');
+        if ($parser->getHeader('to') != $email) {
+            return 0;
+        }
+
         $attachments = $parser->getAttachments();
         if (count($attachments) > 0) {
             foreach ($attachments as $attachment) {
@@ -100,40 +106,6 @@ class RunAction extends AbstractAction
         }
         $this->lastTimestamp = max($this->lastTimestamp, $timestamp);
         return $processedAttachments;
-    }
-
-    protected function getEmailIdFromConfiguration($userConfiguration)
-    {
-        preg_match("/^\d+-(.+)@{$this->appConfiguration['emailDomain']}/", $userConfiguration['email'], $match);
-        if (count($match) < 2) {
-            throw new Exception('Email address is not configured for the project');
-        }
-        return $match[1];
-    }
-
-    protected function checkDbRecord($userConfiguration)
-    {
-        $dynamo = $this->initDynamoDb();
-        $result = $dynamo->query([
-            'TableName' => $this->appConfiguration['dynamoTable'],
-            'KeyConditions' => [
-                'Project' => [
-                    'AttributeValueList' => [
-                        ['N' => $userConfiguration['kbcProject']]
-                    ],
-                    'ComparisonOperator' => 'EQ'
-                ],
-                'Email' => [
-                    'AttributeValueList' => [
-                        ['S' => $userConfiguration['email']]
-                    ],
-                    'ComparisonOperator' => 'EQ'
-                ],
-            ],
-        ]);
-        if (!$result['Count']) {
-            throw new Exception('Email address is not configured for the project');
-        }
     }
 
     protected function saveFile($userConfiguration, Attachment $attachment)

@@ -45,7 +45,7 @@ Received: from [10.0.1.8] (ip-78-45-129-24.net.upcbroadband.cz. [78.45.129.24])
         Tue, 19 Dec 2017 07:07:52 -0800 (PST)
 Date: Tue, 19 Dec 2017 16:07:40 +0100
 From: =?utf-8?Q?Jakub_Mat=C4=9Bjka?= <test@keboola.com>
-To: 313-5a392b308694a@import.test.keboola.com
+To: {{EMAIL}}
 Message-ID: <7bac924c-d316-4379-9497-486c8712e039@Spark>
 In-Reply-To: <b5ab5b8d-9b84-4f9c-a43f-3c79ced6e2cc@Spark>
 References: <9bebd73c-544d-4e31-a7b4-7c8d3d6c5d3d@Spark>
@@ -133,7 +133,7 @@ mily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22>
 --5a392b45_625558ec_449
 Content-Type: application/octet-stream
 Content-Transfer-Encoding: base64
-Content-Disposition: attachment; 
+Content-Disposition: attachment;
  filename="=?utf-8?Q?out.c=5Fmain.categories.csv?="
 
 ImlkIiwibmFtZSIsIm9yZGVyIgoiYzEiLCJDYXRlZ29yeSAxIiwiMSIKImMyIiwiQ2F0ZWdvcnkg

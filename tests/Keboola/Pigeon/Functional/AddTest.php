@@ -13,30 +13,15 @@ class AddTest extends AbstractTest
 {
     public function testAdd()
     {
+        $config = uniqid();
         $result = App::execute(
             $this->appConfiguration,
-            ['action' => 'add', 'kbcProject' => $this->project],
+            ['action' => 'add', 'kbcProject' => $this->project, 'config' => $config],
             $this->temp
         );
         $this->assertArrayHasKey('email', $result);
         $this->assertStringStartsWith($this->project, $result['email']);
         preg_match('/^\d+-(.+)@' . EMAIL_DOMAIN . '/', $result['email'], $match);
-        $id = $match[1];
-
-        $ruleName = sprintf("%s-%d-%s", STACK_NAME, $this->project, $id);
-        $rule = $this->ses->describeReceiptRule(['RuleSetName' => RULE_SET, 'RuleName' => $ruleName]);
-        $this->assertArrayHasKey('Rule', $rule);
-        $this->assertArrayHasKey('Recipients', $rule['Rule']);
-        $this->assertCount(1, $rule['Rule']['Recipients']);
-        $this->assertEquals($result['email'], $rule['Rule']['Recipients'][0]);
-        $this->assertCount(1, $rule['Rule']['Actions']);
-        $this->assertArrayHasKey('S3Action', $rule['Rule']['Actions'][0]);
-        $this->assertArrayHasKey('BucketName', $rule['Rule']['Actions'][0]['S3Action']);
-        $this->assertArrayHasKey('ObjectKeyPrefix', $rule['Rule']['Actions'][0]['S3Action']);
-        $this->assertEquals(BUCKET, $rule['Rule']['Actions'][0]['S3Action']['BucketName']);
-        $this->assertEquals("$this->project/$id/", $rule['Rule']['Actions'][0]['S3Action']['ObjectKeyPrefix']);
-
-        $this->ses->deleteReceiptRule(['RuleSetName' => RULE_SET, 'RuleName' => $ruleName]);
 
         $dbRow = $this->dynamo->query([
             'TableName' => DYNAMO_TABLE,
@@ -47,9 +32,9 @@ class AddTest extends AbstractTest
                     ],
                     'ComparisonOperator' => 'EQ'
                 ],
-                'Email' => [
+                'Config' => [
                     'AttributeValueList' => [
-                        ['S' => $result['email']]
+                        ['S' => $config]
                     ],
                     'ComparisonOperator' => 'EQ'
                 ],
@@ -57,5 +42,17 @@ class AddTest extends AbstractTest
         ]);
         $this->assertArrayHasKey('Items', $dbRow);
         $this->assertCount(1, $dbRow['Items']);
+        $this->assertArrayHasKey('Email', $dbRow['Items'][0]);
+        $this->assertArrayHasKey('S', $dbRow['Items'][0]['Email']);
+        $this->assertEquals($result['email'], $dbRow['Items'][0]['Email']['S']);
+
+        // Call add once more but it should return the same email
+        $result2 = App::execute(
+            $this->appConfiguration,
+            ['action' => 'add', 'kbcProject' => $this->project, 'config' => $config],
+            $this->temp
+        );
+        $this->assertArrayHasKey('email', $result2);
+        $this->assertEquals($result['email'], $result2['email']);
     }
 }

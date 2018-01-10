@@ -57,7 +57,7 @@
             "AttributeType": "N"
           },
           {
-            "AttributeName": "Email",
+            "AttributeName": "Config",
             "AttributeType": "S"
           }
         ],
@@ -67,7 +67,7 @@
             "KeyType": "HASH"
           },
           {
-            "AttributeName": "Email",
+            "AttributeName": "Config",
             "KeyType": "RANGE"
           }
         ],

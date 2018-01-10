@@ -106,11 +106,14 @@ class RunCommand extends Command
             'action' => isset($config['action']) ? $config['action'] : 'run',
         ];
         if ($result['action'] == 'run') {
+            $result['config'] = getenv('KBC_CONFIGID');
             $result = array_merge($result, $this->getRequiredParameters($config, ['email'], 'parameters'));
             $result = array_merge(
                 $result,
                 $this->getOptionalParameters($config, ['incremental', 'enclosure', 'delimiter'], 'parameters')
             );
+        } elseif ($result['action'] == 'add') {
+            $result = array_merge($result, $this->getRequiredParameters($config, ['config'], 'parameters'));
         }
         return $result;
     }

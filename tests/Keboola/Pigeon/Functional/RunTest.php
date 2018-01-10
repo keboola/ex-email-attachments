@@ -17,7 +17,7 @@ class RunTest extends AbstractTest
         $this->expectException(Exception::class);
         App::execute(
             $this->appConfiguration,
-            ['action' => 'run', 'kbcProject' => $this->project, 'email' => uniqid()],
+            ['action' => 'run', 'kbcProject' => $this->project, 'config' => uniqid(), 'email' => uniqid()],
             $this->temp
         );
     }
@@ -25,27 +25,31 @@ class RunTest extends AbstractTest
     public function testRunOk()
     {
         $id = uniqid();
-        $email = "{$this->project}-{$id}@" . EMAIL_DOMAIN;
+        $config = uniqid();
+        $email = "{$this->project}-{$config}-{$id}@" . EMAIL_DOMAIN;
+
+        $emailBody = str_replace('{{EMAIL}}', $email, file_get_contents(__DIR__ . '/email'));
         $this->s3->putObject([
             'Bucket' => BUCKET,
-            'Key' => "{$this->project}/$id/{$id}0",
-            'SourceFile' => __DIR__ . '/email',
+            'Key' => "{$this->project}/{$config}/{$id}0",
+            'Body' => $emailBody,
         ]);
         sleep(2);
         $this->s3->putObject([
             'Bucket' => BUCKET,
-            'Key' => "{$this->project}/$id/$id",
-            'SourceFile' => __DIR__ . '/email',
+            'Key' => "{$this->project}/{$config}/{$id}",
+            'Body' => $emailBody,
         ]);
         $object = $this->s3->headObject([
             'Bucket' => BUCKET,
-            'Key' => "{$this->project}/$id/$id",
+            'Key' => "{$this->project}/{$config}/{$id}",
         ]);
         $lastDownloadedFileTimestamp = $object['LastModified']->format('U') - 1;
         $this->dynamo->putItem([
             'TableName' => DYNAMO_TABLE,
             'Item' => [
                 'Project' => ['N' => $this->project],
+                'Config' => ['S' => $config],
                 'Email' => ['S' => $email],
             ],
         ]);
@@ -54,6 +58,7 @@ class RunTest extends AbstractTest
             $this->appConfiguration,
             [
                 'action' => 'run',
+                'config' => $config,
                 'kbcProject' => $this->project,
                 'outputPath' => $this->outputPath,
                 'email' => $email,
