@@ -112,7 +112,7 @@ class RunCommand extends Command
                 $result,
                 $this->getOptionalParameters($config, ['incremental', 'enclosure', 'delimiter'], 'parameters')
             );
-        } elseif ($result['action'] == 'add') {
+        } elseif ($result['action'] == 'get') {
             $result = array_merge($result, $this->getRequiredParameters($config, ['config'], 'parameters'));
         }
         return $result;
