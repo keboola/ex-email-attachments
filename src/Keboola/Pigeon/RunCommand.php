@@ -123,7 +123,7 @@ class RunCommand extends Command
         $result = [];
         foreach ($required as $input) {
             if (!isset($config[$field][$input])) {
-                throw new \Exception("$input is missing from $field");
+                throw new Exception("$input is missing from $field");
             }
             $result[$input] = $config[$field][$input];
         }
