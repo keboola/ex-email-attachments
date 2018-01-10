@@ -9,14 +9,14 @@ namespace Keboola\Pigeon\Tests\Functional;
 
 use Keboola\Pigeon\App;
 
-class AddTest extends AbstractTest
+class GetTest extends AbstractTest
 {
-    public function testAdd()
+    public function testGet()
     {
         $config = uniqid();
         $result = App::execute(
             $this->appConfiguration,
-            ['action' => 'add', 'kbcProject' => $this->project, 'config' => $config],
+            ['action' => 'get', 'kbcProject' => $this->project, 'config' => $config],
             $this->temp
         );
         $this->assertArrayHasKey('email', $result);
@@ -49,7 +49,7 @@ class AddTest extends AbstractTest
         // Call add once more but it should return the same email
         $result2 = App::execute(
             $this->appConfiguration,
-            ['action' => 'add', 'kbcProject' => $this->project, 'config' => $config],
+            ['action' => 'get', 'kbcProject' => $this->project, 'config' => $config],
             $this->temp
         );
         $this->assertArrayHasKey('email', $result2);

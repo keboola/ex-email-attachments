@@ -9,7 +9,7 @@ namespace Keboola\Pigeon\Action;
 
 use Keboola\Pigeon\Exception;
 
-class AddAction extends AbstractAction
+class GetAction extends AbstractAction
 {
     public function execute($userConfiguration)
     {

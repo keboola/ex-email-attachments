@@ -18,8 +18,8 @@ class App
                 $action = new \Keboola\Pigeon\Action\RunAction($appConfiguration, $temp);
                 return $action->execute($userConfiguration);
                 break;
-            case 'add':
-                $action = new \Keboola\Pigeon\Action\AddAction($appConfiguration, $temp);
+            case 'get':
+                $action = new \Keboola\Pigeon\Action\GetAction($appConfiguration, $temp);
                 return $action->execute($userConfiguration);
                 break;
             case 'list':
