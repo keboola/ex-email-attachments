@@ -1,0 +1,27 @@
+{
+  "name": "pigeon-lambda-handler",
+  "author": "Jakub Matejka <jakub@keboola.com>",
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "Lambda handler for Keboola Pigeon",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/keboola/pigeon.git"
+  },
+  "dependencies": {
+    "@keboola/serverless-request-handler": "^1.1.1",
+    "bluebird": "^3.4.7",
+    "lodash": "^4.17.4",
+    "mailparser": "^2.1.0",
+    "moment": "^2.20.1"
+  },
+  "devDependencies": {
+    "@keboola/serverless-papertrail-logging": "^1.0.4",
+    "aws-sdk": "^2.49.0",
+    "mocha": "^4.1.0",
+    "mz": "^2.7.0",
+    "serverless-external-s3-event": "^1.0.9",
+    "unexpected": "^10.36.2",
+    "uniqid": "^4.1.1"
+  }
+}

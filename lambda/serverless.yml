@@ -1,0 +1,97 @@
+service: "${env:SERVICE_NAME}"
+
+custom:
+  papertrail:
+    port: ${env:PAPERTRAIL_PORT}
+
+plugins:
+  - serverless-external-s3-event
+  - '@keboola/serverless-papertrail-logging'
+
+provider:
+  name: aws
+  region: ${env:REGION}
+  stage: ${env:STAGE}
+  runtime: nodejs6.10
+  memorySize: 256
+  timeout: 30
+  versionFunctions: false
+  environment:
+    DYNAMO_TABLE: ${env:DYNAMO_TABLE}
+    S3_BUCKET: ${env:S3_BUCKET}
+  role: pigeonLambdaRole
+  stackTags:
+    KeboolaStack: ${env:KEBOOLA_STACK}
+  iamRoleStatements:
+    -  Effect: "Allow"
+       Action:
+         - "s3:PutBucketNotification"
+       Resource:
+         - "arn:aws:s3:::${env:S3_BUCKET}"
+
+package:
+  include:
+    - src/pigeon.js
+    - node_modules/**
+  exclude:
+    - .env
+    - docker-compose.yml
+    - Dockerfile
+    - package.json
+    - yarn.lock
+
+functions:
+
+  s3Handler:
+    handler: src/handler.handler
+    tags:
+      KeboolaStack: ${env:KEBOOLA_STACK}
+    events:
+      -
+        existingS3:
+          bucket: "${env:S3_BUCKET}"
+          event: "s3:ObjectCreated:Put"
+          rules:
+            - prefix: _incoming/
+
+resources:
+  Resources:
+    pigeonLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: "${env:SERVICE_NAME}-role"
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: "${env:SERVICE_NAME}-policy"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: { 'Fn::Join': [':', ['arn:aws:logs', { Ref: 'AWS::Region' }, { Ref: 'AWS::AccountId' }, 'log-group:/aws/lambda/*:*:*']] }
+                - Effect: Allow
+                  Action:
+                    - "s3:*"
+                  Resource:
+                    - "arn:aws:s3:::${env:S3_BUCKET}/*"
+                - Effect: Allow
+                  Action:
+                    - "dynamodb:*"
+                  Resource: { 'Fn::Join': [':', ['arn:aws:dynamodb', { Ref: 'AWS::Region' }, { Ref: 'AWS::AccountId' }, "table/${env:DYNAMO_TABLE}"]] }
+                - Effect: Allow
+                  Action:
+                    - ec2:CreateNetworkInterface
+                    - ec2:DescribeNetworkInterfaces
+                    - ec2:DetachNetworkInterface
+                    - ec2:DeleteNetworkInterface
+                  Resource: "*"

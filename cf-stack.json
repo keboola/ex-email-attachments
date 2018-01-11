@@ -89,22 +89,7 @@
         "UserName": { "Ref": "KeboolaStack" },
         "Policies": [
           {
-            "PolicyName": "SESFullAccess",
-            "PolicyDocument":  {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "ses:*"
-                  ],
-                  "Resource": "*"
-                }
-              ]
-            }
-          },
-          {
-            "PolicyName": "S3BucketReadAccess",
+            "PolicyName": "S3BucketAccess",
             "PolicyDocument":  {
               "Version": "2012-10-17",
               "Statement": [

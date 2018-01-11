@@ -32,24 +32,24 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
         parent::setUp();
         $this->dynamo = new DynamoDbClient([
             'credentials'=> [
-                'key' => ACCESS_KEY_ID,
-                'secret' => SECRET_ACCESS_KEY,
+                'key' => USER_ACCESS_KEY_ID,
+                'secret' => USER_SECRET_ACCESS_KEY,
             ],
             'region' => REGION,
             'version' => '2012-08-10',
         ]);
         $this->ses = new SesClient([
             'credentials'=> [
-                'key' => ACCESS_KEY_ID,
-                'secret' => SECRET_ACCESS_KEY,
+                'key' => USER_ACCESS_KEY_ID,
+                'secret' => USER_SECRET_ACCESS_KEY,
             ],
             'region' => REGION,
             'version' => '2010-12-01',
         ]);
         $this->s3 = new S3Client([
             'credentials'=> [
-                'key' => ACCESS_KEY_ID,
-                'secret' => SECRET_ACCESS_KEY,
+                'key' => USER_ACCESS_KEY_ID,
+                'secret' => USER_SECRET_ACCESS_KEY,
             ],
             'region' => REGION,
             'version' => '2006-03-01',
@@ -59,12 +59,11 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
         $this->outputPath = '/data/out/tables';
         (new Filesystem())->mkdir([$this->outputPath]);
         $this->appConfiguration = [
-            'accessKeyId' => ACCESS_KEY_ID,
-            'secretAccessKey' => SECRET_ACCESS_KEY,
+            'accessKeyId' => USER_ACCESS_KEY_ID,
+            'secretAccessKey' => USER_SECRET_ACCESS_KEY,
             'region' => REGION,
-            'bucket' => BUCKET,
+            'bucket' => S3_BUCKET,
             'emailDomain' => EMAIL_DOMAIN,
-            'ruleSet' => RULE_SET,
             'dynamoTable' => DYNAMO_TABLE,
             'stackName' => STACK_NAME,
         ];
@@ -115,6 +114,6 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
 
     protected function cleanS3()
     {
-        $this->s3->deleteMatchingObjects(BUCKET, "$this->project/");
+        $this->s3->deleteMatchingObjects(S3_BUCKET, "$this->project/");
     }
 }

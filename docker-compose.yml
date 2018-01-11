@@ -8,21 +8,20 @@ services:
     tty: true
     stdin_open: true
 
-  tests:
+  test:
     image: keboola/pigeon
     volumes:
       - ./:/code
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
     entrypoint: /code/vendor/bin/phpunit
     environment:
-      - ACCESS_KEY_ID
-      - BUCKET
       - DYNAMO_TABLE
       - EMAIL_DOMAIN
       - REGION
-      - RULE_SET
-      - SECRET_ACCESS_KEY
+      - S3_BUCKET
       - STACK_NAME
+      - USER_ACCESS_KEY_ID
+      - USER_SECRET_ACCESS_KEY
 
   dev:
     build: .
@@ -33,3 +32,121 @@ services:
       - ./:/code
     environment:
       - KBC_PROJECTID
+
+  lambda-deploy:
+    build:
+      context: ./lambda
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./lambda:/code
+    working_dir: /code
+    environment:
+      - "AWS_ACCESS_KEY_ID=${TEST_USER_AWS_ACCESS_KEY_ID}"
+      - "AWS_SECRET_ACCESS_KEY=${TEST_USER_AWS_SECRET_ACCESS_KEY}"
+      - "SERVICE_NAME=${TEST_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${TEST_STACK_NAME}"
+      - "REGION=${TEST_REGION}"
+      - "STAGE=${TEST_STAGE}"
+      - "DYNAMO_TABLE=${TEST_DYNAMO_TABLE}"
+      - "S3_BUCKET=${TEST_S3_BUCKET}"
+      - "PAPERTRAIL_PORT=${TEST_PAPERTRAIL_PORT}"
+    command: >
+             sh -c '
+             serverless deploy
+             '
+
+  production-lambda-deploy:
+    build:
+      context: ./lambda
+      dockerfile: ./Dockerfile
+    environment:
+      - "AWS_ACCESS_KEY_ID=${DEPLOY_AWS_ACCESS_KEY_ID}"
+      - "AWS_SECRET_ACCESS_KEY=${DEPLOY_AWS_SECRET_ACCESS_KEY}"
+      - "SERVICE_NAME=${DEPLOY_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${DEPLOY_STACK_NAME}"
+      - "REGION=${DEPLOY_REGION}"
+      - "STAGE=${DEPLOY_STAGE}"
+      - "DYNAMO_TABLE=${DEPLOY_DYNAMO_TABLE}"
+      - "S3_BUCKET=${DEPLOY_S3_BUCKET}"
+      - "PAPERTRAIL_PORT=${DEPLOY_PAPERTRAIL_PORT}"
+    command: >
+             sh -c '
+             serverless deploy
+             '
+
+  test-lambda:
+    build:
+      context: ./lambda
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./lambda:/code
+    working_dir: /code
+    environment:
+      - "AWS_ACCESS_KEY_ID=${TEST_USER_AWS_ACCESS_KEY_ID}"
+      - "AWS_SECRET_ACCESS_KEY=${TEST_USER_AWS_SECRET_ACCESS_KEY}"
+      - "SERVICE_NAME=${TEST_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${TEST_STACK_NAME}"
+      - "REGION=${TEST_REGION}"
+      - "STAGE=${TEST_STAGE}"
+      - "DYNAMO_TABLE=${TEST_DYNAMO_TABLE}"
+      - "S3_BUCKET=${TEST_S3_BUCKET}"
+      - "PAPERTRAIL_PORT=${TEST_PAPERTRAIL_PORT}"
+    command: >
+             sh -c '
+             ./node_modules/.bin/mocha --timeout 0 test/handler.js
+             '
+
+  travis-php-test:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - "DYNAMO_TABLE=${TRAVIS_DYNAMO_TABLE}"
+      - "EMAIL_DOMAIN=${TRAVIS_EMAIL_DOMAIN}"
+      - "REGION=${TRAVIS_REGION}"
+      - "S3_BUCKET=${TRAVIS_S3_BUCKET}"
+      - "STACK_NAME=${TRAVIS_STACK_NAME}"
+      - "USER_ACCESS_KEY_ID=${TRAVIS_USER_ACCESS_KEY_ID}"
+      - "USER_SECRET_ACCESS_KEY=${TRAVIS_USER_SECRET_ACCESS_KEY}"
+    command: >
+           sh -c '
+           ./vendor/bin/phpunit
+           '
+
+  travis-lambda-test:
+    build:
+      context: ./lambda
+      dockerfile: ./Dockerfile
+    environment:
+      - "AWS_ACCESS_KEY_ID=${TRAVIS_AWS_ACCESS_KEY_ID}"
+      - "AWS_SECRET_ACCESS_KEY=${TRAVIS_AWS_SECRET_ACCESS_KEY}"
+      - "SERVICE_NAME=${TRAVIS_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${TRAVIS_STACK_NAME}"
+      - "REGION=${TRAVIS_REGION}"
+      - "STAGE=${TRAVIS_STAGE}"
+      - "DYNAMO_TABLE=${TRAVIS_DYNAMO_TABLE}"
+      - "S3_BUCKET=${TRAVIS_S3_BUCKET}"
+      - "PAPERTRAIL_PORT=${TRAVIS_PAPERTRAIL_PORT}"
+    command: >
+             sh -c '
+             ./node_modules/.bin/mocha --timeout 0 test/handler.js
+             '
+
+  travis-lambda-deploy:
+    build:
+      context: ./lambda
+      dockerfile: ./Dockerfile
+    environment:
+      - "AWS_ACCESS_KEY_ID=${TRAVIS_AWS_ACCESS_KEY_ID}"
+      - "AWS_SECRET_ACCESS_KEY=${TRAVIS_AWS_SECRET_ACCESS_KEY}"
+      - "DYNAMO_TABLE=${TRAVIS_DYNAMO_TABLE}"
+      - "KEBOOLA_STACK=${TRAVIS_STACK_NAME}"
+      - "PAPERTRAIL_PORT=${TRAVIS_PAPERTRAIL_PORT}"
+      - "REGION=${TRAVIS_REGION}"
+      - "S3_BUCKET=${TRAVIS_S3_BUCKET}"
+      - "SERVICE_NAME=${TRAVIS_SERVICE_NAME}"
+      - "STAGE=${TRAVIS_STAGE}"
+    command: >
+             sh -c '
+             serverless deploy
+             '

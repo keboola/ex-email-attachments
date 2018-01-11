@@ -9,10 +9,6 @@ KBC Docker app provisions email mailboxes and monitors them for incoming csv fil
 
 The extractor saves timestamp of last processed email to know where to start in the next run. Potentially, it may bring a problem in a moment when two emails are delivered in the same second and the extractor processes only one of them and ends. Then, in its next run, it will skip the other email and won't process it at all.
 
-## Configuration
-
-- **parameters**:
-
 ## Setup
 1. Create CloudFormation stack: `aws cloudformation create-stack --stack-name pigeon --template-body file://./cf-stack.json --parameters ParameterKey=KeboolaStack,ParameterValue=pigeon --region eu-west-1 --capabilities CAPABILITY_NAMED_IAM`
     - It creates S3 Bucket, Dynamo DB table and IAM user
@@ -21,6 +17,9 @@ The extractor saves timestamp of last processed email to know where to start in 
 2. Add a MX record with value e.g. `1 inbound-smtp.eu-west-1.amazonaws.com` pointing to your email domain (e.g. `import.keboola.com`) in Route53
 3. Verify the domain in SES (https://console.aws.amazon.com/ses/home?region=eu-west-1#verified-senders-domain:)
 4. Create a Rule Set in SES if there is none active yet (https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#receipt-rules: - notice that there can be only one active at a time)
+5. Create a Rule in the Rule Set
+    - set `Recipient` as `*@email_domain` (e.g. `*@import.test.keboola.com`)
+    - add `S3` action, choose the bucket created by CloudFormation and set `incoming/` as Object key prefix
 6. Set these `image_parameters`:
     - `access_key_id` - Set from CloudFormation output `UserAccessKey`
     - `#secret_access_key` - Set from CloudFormation output `UserSecretKey` amd encrypt

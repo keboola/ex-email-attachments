@@ -30,18 +30,18 @@ class RunTest extends AbstractTest
 
         $emailBody = str_replace('{{EMAIL}}', $email, file_get_contents(__DIR__ . '/email'));
         $this->s3->putObject([
-            'Bucket' => BUCKET,
+            'Bucket' => S3_BUCKET,
             'Key' => "{$this->project}/{$config}/{$id}0",
             'Body' => $emailBody,
         ]);
         sleep(2);
         $this->s3->putObject([
-            'Bucket' => BUCKET,
+            'Bucket' => S3_BUCKET,
             'Key' => "{$this->project}/{$config}/{$id}",
             'Body' => $emailBody,
         ]);
         $object = $this->s3->headObject([
-            'Bucket' => BUCKET,
+            'Bucket' => S3_BUCKET,
             'Key' => "{$this->project}/{$config}/{$id}",
         ]);
         $lastDownloadedFileTimestamp = $object['LastModified']->format('U') - 1;
