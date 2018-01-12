@@ -18,8 +18,8 @@ The extractor saves timestamp of last processed email to know where to start in 
 3. Verify the domain in SES (https://console.aws.amazon.com/ses/home?region=eu-west-1#verified-senders-domain:)
 4. Create a Rule Set in SES if there is none active yet (https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#receipt-rules: - notice that there can be only one active at a time)
 5. Create a Rule in the Rule Set
-    - set `Recipient` as `*@email_domain` (e.g. `*@import.test.keboola.com`)
-    - add `S3` action, choose the bucket created by CloudFormation and set `incoming/` as Object key prefix
+    - set `Recipient` as `email_domain` (e.g. `import.test.keboola.com`)
+    - add `S3` action, choose the bucket created by CloudFormation and set `_incoming/` as Object key prefix
 6. Set these `image_parameters`:
     - `access_key_id` - Set from CloudFormation output `UserAccessKey`
     - `#secret_access_key` - Set from CloudFormation output `UserSecretKey` amd encrypt
