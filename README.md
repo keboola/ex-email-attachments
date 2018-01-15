@@ -5,6 +5,18 @@ KBC Docker app provisions email mailboxes and monitors them for incoming csv fil
 
 [![Build Status](https://travis-ci.org/keboola/pigeon.svg)](https://travis-ci.org/keboola/pigeon) [![Code Climate](https://codeclimate.com/github/keboola/pigeon/badges/gpa.svg)](https://codeclimate.com/github/keboola/pigeon)
 
+## App Flow
+
+- Emails are processed by AWS SES service
+- `get` sync action generates an email address for extractor's configuration and saves it to DynamoDB table
+- SES has a rule to save all emails with specified email domain to a S3 bucket in folder `_incoming`
+- There is a lambda handler subscribed to the `_incoming` folder which gets recipient address and checks its existence in DynamoDB
+- If the email exists, the email file is moved to folder `[projectId]/[configId]`
+- If the email does not exist, the file is moved to folder `_invalid`
+- The S3 bucket has a lifecycle 30 days - all files are deleted after that period
+- The extractor checks S3 folder `[projectId]/[configId]` and processes new files
+- It saves timestamp of last processed file to the state
+
 ## Notice
 
 The extractor saves timestamp of last processed email to know where to start in the next run. Potentially, it may bring a problem in a moment when two emails are delivered in the same second and the extractor processes only one of them and ends. Then, in its next run, it will skip the other email and won't process it at all.
