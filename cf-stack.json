@@ -10,7 +10,7 @@
     "S3Bucket": {
       "Type": "AWS::S3::Bucket",
       "Properties": {
-        "BucketName": { "Fn::Join" : ["", [{ "Ref": "KeboolaStack" }, "-emails"]] },
+        "BucketName": { "Fn::Join" : ["-", [{ "Ref": "KeboolaStack" }, { "Ref" : "AWS::Region" }, "emails"]] },
         "LifecycleConfiguration": {
           "Rules": [
             {
@@ -50,7 +50,7 @@
     "DynamoTable": {
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
-        "TableName": { "Fn::Join" : ["", [{ "Ref": "KeboolaStack" }, "-emails"]] },
+        "TableName": { "Fn::Join" : ["-", [{ "Ref": "KeboolaStack" }, { "Ref" : "AWS::Region" }, "emails"]] },
         "AttributeDefinitions": [
           {
             "AttributeName": "Project",
@@ -86,7 +86,7 @@
     "IamUser": {
       "Type": "AWS::IAM::User",
       "Properties": {
-        "UserName": { "Ref": "KeboolaStack" },
+        "UserName": { "Fn::Join" : ["-", [{ "Ref": "KeboolaStack" }, { "Ref" : "AWS::Region" }]] },
         "Policies": [
           {
             "PolicyName": "S3BucketAccess",

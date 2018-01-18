@@ -24,6 +24,6 @@ after_success:
 deploy:
   provider: script
   skip_cleanup: true
-  script: docker-compose run --rm production-lambda-deploy && ./deploy.sh
+  script: docker-compose run --rm production-lambda-deploy && docker-compose run --rm production-eu-lambda-deploy && ./deploy.sh
   on:
     tags: true

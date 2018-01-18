@@ -74,6 +74,25 @@ services:
              serverless deploy
              '
 
+  production-eu-lambda-deploy:
+    build:
+      context: ./lambda
+      dockerfile: ./Dockerfile
+    environment:
+      - "AWS_ACCESS_KEY_ID=${DEPLOY_AWS_ACCESS_KEY_ID}"
+      - "AWS_SECRET_ACCESS_KEY=${DEPLOY_AWS_SECRET_ACCESS_KEY}"
+      - "SERVICE_NAME=${DEPLOY_EU_SERVICE_NAME}"
+      - "KEBOOLA_STACK=${DEPLOY_STACK_NAME}"
+      - "REGION=${DEPLOY_EU_REGION}"
+      - "STAGE=${DEPLOY_STAGE}"
+      - "DYNAMO_TABLE=${DEPLOY_EU_DYNAMO_TABLE}"
+      - "S3_BUCKET=${DEPLOY_EU_S3_BUCKET}"
+      - "PAPERTRAIL_PORT=${DEPLOY_PAPERTRAIL_PORT}"
+    command: >
+             sh -c '
+             serverless deploy
+             '
+
   test-lambda:
     build:
       context: ./lambda
