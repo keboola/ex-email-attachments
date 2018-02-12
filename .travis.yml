@@ -14,9 +14,7 @@ before_script:
   - docker-compose run --rm app /code/vendor/bin/phpstan analyse --level=7 ./src
 
 script:
-  - docker-compose run --rm travis-php-test
-  - docker-compose run --rm travis-lambda-deploy
-  - docker-compose run --rm travis-lambda-test
+  - docker-compose run --rm ci-test
 
 after_success:
   - docker images
@@ -24,6 +22,6 @@ after_success:
 deploy:
   provider: script
   skip_cleanup: true
-  script: docker-compose run --rm production-lambda-deploy && docker-compose run --rm production-eu-lambda-deploy && ./deploy.sh
+  script: ./deploy.sh
   on:
     tags: true

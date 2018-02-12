@@ -6,7 +6,4 @@ run-test.sh
 data
 build
 vars
-lambda/.serverless
-lambda/node_modules
-lambda/yarn.lock
 .env

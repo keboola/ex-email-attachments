@@ -1,6 +1,8 @@
 # Pigeon
 KBC Docker app provisions email mailboxes and monitors them for incoming csv files in attachments which are imported to Keboola Storage.
 
+Lambda handler is in separate repository [keboola/pigeon-lambda](https://github.com/keboola/pigeon-lambda)
+
 ## Status
 
 [![Build Status](https://travis-ci.org/keboola/pigeon.svg)](https://travis-ci.org/keboola/pigeon) [![Code Climate](https://codeclimate.com/github/keboola/pigeon/badges/gpa.svg)](https://codeclimate.com/github/keboola/pigeon)
