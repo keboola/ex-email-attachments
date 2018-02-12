@@ -65,6 +65,7 @@ class RunTest extends AbstractTest
                 'incremental' => true,
                 'enclosure' => '"',
                 'delimiter' => ',',
+                'primaryKey' => ['id'],
                 'state' => ['lastDownloadedFileTimestamp' => $lastDownloadedFileTimestamp],
             ],
             $this->temp

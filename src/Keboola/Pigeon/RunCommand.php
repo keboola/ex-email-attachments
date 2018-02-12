@@ -110,8 +110,15 @@ class RunCommand extends Command
             $result = array_merge($result, $this->getRequiredParameters($config, ['email'], 'parameters'));
             $result = array_merge(
                 $result,
-                $this->getOptionalParameters($config, ['incremental', 'enclosure', 'delimiter'], 'parameters')
+                $this->getOptionalParameters(
+                    $config,
+                    ['incremental', 'enclosure', 'delimiter', 'primaryKey'],
+                    'parameters'
+                )
             );
+            if (isset($result['primaryKey']) && !is_array($result['primaryKey'])) {
+                throw new Exception('Primary Key parameter must be an array');
+            }
         } elseif ($result['action'] == 'get') {
             $result = array_merge($result, $this->getRequiredParameters($config, ['config'], 'parameters'));
         }

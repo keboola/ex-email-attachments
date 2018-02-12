@@ -122,6 +122,9 @@ class RunAction extends AbstractAction
         if (!empty($userConfiguration['enclosure'])) {
             $manifest['enclosure'] = $userConfiguration['enclosure'];
         }
+        if (!empty($userConfiguration['primaryKey'])) {
+            $manifest['primary_key'] = $userConfiguration['primaryKey'];
+        }
         if ($manifest) {
             file_put_contents("$fileName.manifest", json_encode($manifest));
         }
