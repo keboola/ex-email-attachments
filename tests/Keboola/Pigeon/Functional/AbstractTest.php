@@ -32,24 +32,24 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
         parent::setUp();
         $this->dynamo = new DynamoDbClient([
             'credentials'=> [
-                'key' => USER_ACCESS_KEY_ID,
-                'secret' => USER_SECRET_ACCESS_KEY,
+                'key' => AWS_ACCESS_KEY_ID,
+                'secret' => AWS_SECRET_ACCESS_KEY,
             ],
             'region' => REGION,
             'version' => '2012-08-10',
         ]);
         $this->ses = new SesClient([
             'credentials'=> [
-                'key' => USER_ACCESS_KEY_ID,
-                'secret' => USER_SECRET_ACCESS_KEY,
+                'key' => AWS_ACCESS_KEY_ID,
+                'secret' => AWS_SECRET_ACCESS_KEY,
             ],
             'region' => REGION,
             'version' => '2010-12-01',
         ]);
         $this->s3 = new S3Client([
             'credentials'=> [
-                'key' => USER_ACCESS_KEY_ID,
-                'secret' => USER_SECRET_ACCESS_KEY,
+                'key' => AWS_ACCESS_KEY_ID,
+                'secret' => AWS_SECRET_ACCESS_KEY,
             ],
             'region' => REGION,
             'version' => '2006-03-01',
@@ -59,13 +59,12 @@ abstract class AbstractTest extends \PHPUnit\Framework\TestCase
         $this->outputPath = '/data/out/tables';
         (new Filesystem())->mkdir([$this->outputPath]);
         $this->appConfiguration = [
-            'accessKeyId' => USER_ACCESS_KEY_ID,
-            'secretAccessKey' => USER_SECRET_ACCESS_KEY,
+            'accessKeyId' => AWS_ACCESS_KEY_ID,
+            'secretAccessKey' => AWS_SECRET_ACCESS_KEY,
             'region' => REGION,
             'bucket' => S3_BUCKET,
             'emailDomain' => EMAIL_DOMAIN,
             'dynamoTable' => DYNAMO_TABLE,
-            'stackName' => STACK_NAME,
         ];
         $this->temp = new Temp();
 

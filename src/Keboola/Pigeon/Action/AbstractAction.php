@@ -20,7 +20,6 @@ abstract class AbstractAction
     protected $appConfiguration;
     protected $emailDomain;
     protected $bucketName;
-    protected $ruleSetName;
 
     public function __construct($appConfiguration, Temp $temp)
     {

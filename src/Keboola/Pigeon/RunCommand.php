@@ -83,8 +83,7 @@ class RunCommand extends Command
     {
         $params = $this->getRequiredParameters(
             $config,
-            ['access_key_id', '#secret_access_key', 'region', 'bucket', 'email_domain', 'rule_set',
-                'dynamo_table', 'stack_name'],
+            ['access_key_id', '#secret_access_key', 'region', 'bucket', 'email_domain', 'dynamo_table'],
             'image_parameters'
         );
         return [
@@ -93,9 +92,7 @@ class RunCommand extends Command
             'region' => $params['region'],
             'bucket' => $params['bucket'],
             'emailDomain' => $params['email_domain'],
-            'ruleSet' => $params['rule_set'],
             'dynamoTable' => $params['dynamo_table'],
-            'stackName' => $params['stack_name'],
         ];
     }
 
