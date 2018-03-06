@@ -1,11 +1,11 @@
-# Pigeon
+# Email attachments extractor
 KBC Docker app provisions email mailboxes and monitors them for incoming csv files in attachments which are imported to Keboola Storage.
 
-Lambda handler is in separate repository [keboola/pigeon-lambda](https://github.com/keboola/pigeon-lambda)
+Lambda handler is in separate repository [keboola/ex-email-attachments-lambda](https://github.com/keboola/ex-email-attachments-lambda)
 
 ## Status
 
-[![Build Status](https://travis-ci.org/keboola/pigeon.svg)](https://travis-ci.org/keboola/pigeon) [![Code Climate](https://codeclimate.com/github/keboola/pigeon/badges/gpa.svg)](https://codeclimate.com/github/keboola/pigeon)
+[![Build Status](https://travis-ci.org/keboola/ex-email-attachments.svg)](https://travis-ci.org/keboola/ex-email-attachments) [![Code Climate](https://codeclimate.com/github/keboola/ex-email-attachments/badges/gpa.svg)](https://codeclimate.com/github/keboola/ex-email-attachments)
 
 ## App Flow
 
@@ -24,9 +24,9 @@ Lambda handler is in separate repository [keboola/pigeon-lambda](https://github.
 The extractor saves timestamp of last processed email to know where to start in the next run. Potentially, it may bring a problem in a moment when two emails are delivered in the same second and the extractor processes only one of them and ends. Then, in its next run, it will skip the other email and won't process it at all.
 
 ## Setup
-1. Create CloudFormation stack: `aws cloudformation create-stack --stack-name pigeon --template-body file://./cf-stack.json --parameters ParameterKey=KeboolaStack,ParameterValue=pigeon --region eu-west-1 --capabilities CAPABILITY_NAMED_IAM`
+1. Create CloudFormation stack: `aws cloudformation create-stack --stack-name dev-ex-email-attachments --template-body file://./cf-stack.json --parameters ParameterKey=KeboolaStack,ParameterValue=ex-email-attachments --region eu-west-1 --capabilities CAPABILITY_NAMED_IAM`
     - It creates S3 Bucket, Dynamo DB table and IAM user
-    - You need to set stack name (e.g. `pigeon`), a value for tag `KeboolaStack` (e.g. `pigeon`) and a region
+    - You need to set stack name (e.g. `dev-ex-email-attachments`), a value for tag `KeboolaStack` (e.g. `ex-email-attachments`) and a region
     - Beware that only some regions support Amazon SES
 2. Add a MX record with value e.g. `1 inbound-smtp.eu-west-1.amazonaws.com` pointing to your email domain (e.g. `import.keboola.com`) in Route53
 3. Verify the domain in SES (https://console.aws.amazon.com/ses/home?region=eu-west-1#verified-senders-domain:)

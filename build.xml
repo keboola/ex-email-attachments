@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="pigeon-tests" default="build">
+<project name="ex-email-attachments-tests" default="build">
     <target name="build" depends="prepare,unit-tests"/>
 
     <target name="clean" description="Cleanup build artifacts">

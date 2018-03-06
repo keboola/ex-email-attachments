@@ -1,13 +1,13 @@
 <?php
 /**
- * @package pigeon
+ * @package ex-email-attachments
  * @copyright 2017 Keboola
  * @author Jakub Matejka <jakub@keboola.com>
  */
 
-namespace Keboola\Pigeon\Tests\Functional;
+namespace Keboola\ExEmailAttachments\Tests\Functional;
 
-use Keboola\Pigeon\App;
+use Keboola\ExEmailAttachments\App;
 
 class GetTest extends AbstractTest
 {

@@ -1,9 +1,9 @@
 {
-  "name": "keboola/pigeon",
+  "name": "keboola/ex-email-attachments",
   "license": "MIT",
   "type": "project",
-  "description": "Keboola Pigeon - Imports csv files in email attachments to Keboola",
-  "keywords": ["keboola", "pigeon"],
+  "description": "Keboola Email attachments extractor - Imports csv files from email attachments to Keboola",
+  "keywords": ["keboola", "email"],
   "authors": [
     {
       "name": "Jakub Matejka",
@@ -30,8 +30,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Keboola\\Pigeon\\": "src/Keboola/Pigeon/",
-      "Keboola\\Pigeon\\Tests\\": "tests/Keboola/Pigeon/"
+      "Keboola\\ExEmailAttachments\\": "src/Keboola/ExEmailAttachments/",
+      "Keboola\\ExEmailAttachments\\Tests\\": "tests/Keboola/ExEmailAttachments/"
     }
   }
 }

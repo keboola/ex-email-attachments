@@ -10,7 +10,7 @@
          syntaxCheck="false"
          bootstrap="tests/bootstrap.php">
 
-    <testsuite name="Pigeon Test">
+    <testsuite name="ExEmailAttachments Test">
         <directory>tests</directory>
     </testsuite>
 

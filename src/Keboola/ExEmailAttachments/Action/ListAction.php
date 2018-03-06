@@ -1,11 +1,11 @@
 <?php
 /**
- * @package pigeon
+ * @package ex-email-attachments
  * @copyright 2017 Keboola
  * @author Jakub Matejka <jakub@keboola.com>
  */
 
-namespace Keboola\Pigeon\Action;
+namespace Keboola\ExEmailAttachments\Action;
 
 class ListAction extends AbstractAction
 {

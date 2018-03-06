@@ -1,16 +1,16 @@
 <?php
 /**
- * @package pigeon
+ * @package ex-email-attachments
  * @copyright 2017 Keboola
  * @author Jakub Matejka <jakub@keboola.com>
  */
 
-namespace Keboola\Pigeon\Action;
+namespace Keboola\ExEmailAttachments\Action;
 
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\S3Client;
 use Aws\Ses\SesClient;
-use Keboola\Pigeon\Exception;
+use Keboola\ExEmailAttachments\Exception;
 use Keboola\Temp\Temp;
 
 abstract class AbstractAction

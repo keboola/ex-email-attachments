@@ -1,10 +1,10 @@
 <?php
 /**
- * @package pigeon
+ * @package ex-email-attachments
  * @copyright Keboola
  * @author Jakub Matejka <jakub@keboola.com>
  */
-namespace Keboola\Pigeon;
+namespace Keboola\ExEmailAttachments;
 
 use Keboola\Temp\Temp;
 use Symfony\Component\Console\Output\ConsoleOutput;

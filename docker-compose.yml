@@ -4,13 +4,13 @@ services:
 
   app:
     build: .
-    image: keboola/pigeon
+    image: keboola/ex-email-attachments
     tty: true
     stdin_open: true
 
   dev-app:
     build: .
-    image: keboola/pigeon
+    image: keboola/ex-email-attachments
     tty: true
     stdin_open: true
     volumes:
@@ -19,7 +19,7 @@ services:
       - KBC_PROJECTID
 
   dev-test:
-    image: keboola/pigeon
+    image: keboola/ex-email-attachments
     volumes:
       - ./:/code
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini

@@ -1,11 +1,11 @@
 <?php
 /**
- * @package pigeon
+ * @package ex-email-attachments
  * @copyright 2017 Keboola
  * @author Jakub Matejka <jakub@keboola.com>
  */
 
-namespace Keboola\Pigeon;
+namespace Keboola\ExEmailAttachments;
 
 use Keboola\Temp\Temp;
 
@@ -15,15 +15,15 @@ class App
     {
         switch ($userConfiguration['action']) {
             case 'run':
-                $action = new \Keboola\Pigeon\Action\RunAction($appConfiguration, $temp);
+                $action = new \Keboola\ExEmailAttachments\Action\RunAction($appConfiguration, $temp);
                 return $action->execute($userConfiguration);
                 break;
             case 'get':
-                $action = new \Keboola\Pigeon\Action\GetAction($appConfiguration, $temp);
+                $action = new \Keboola\ExEmailAttachments\Action\GetAction($appConfiguration, $temp);
                 return $action->execute($userConfiguration);
                 break;
             case 'list':
-                $action = new \Keboola\Pigeon\Action\ListAction($appConfiguration, $temp);
+                $action = new \Keboola\ExEmailAttachments\Action\ListAction($appConfiguration, $temp);
                 return $action->execute($userConfiguration);
                 break;
             default:

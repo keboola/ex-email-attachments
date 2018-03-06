@@ -1,16 +1,15 @@
 <?php
 /**
- * @package pigeon
+ * @package ex-email-attachments
  * @copyright 2017 Keboola
  * @author Jakub Matejka <jakub@keboola.com>
  */
 
-namespace Keboola\Pigeon\Action;
+namespace Keboola\ExEmailAttachments\Action;
 
 use Aws\Api\DateTimeResult;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
-use Keboola\Pigeon\Exception;
 use PhpMimeMailParser\Attachment;
 use PhpMimeMailParser\Parser;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
