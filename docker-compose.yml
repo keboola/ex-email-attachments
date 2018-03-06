@@ -3,14 +3,9 @@ version: "2"
 services:
 
   app:
-    build: .
-    image: keboola/ex-email-attachments
-    tty: true
-    stdin_open: true
-
-  dev-app:
-    build: .
-    image: keboola/ex-email-attachments
+    build:
+      context: .
+      dockerfile: Dockerfile
     tty: true
     stdin_open: true
     volumes:
@@ -18,8 +13,10 @@ services:
     environment:
       - KBC_PROJECTID
 
-  dev-test:
-    image: keboola/ex-email-attachments
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - ./:/code
       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
@@ -31,19 +28,3 @@ services:
       - "EMAIL_DOMAIN=${DEV_EMAIL_DOMAIN}"
       - "REGION=${DEV_REGION}"
       - "S3_BUCKET=${DEV_S3_BUCKET}"
-
-  ci-test:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    environment:
-      - "AWS_ACCESS_KEY_ID=${TRAVIS_AWS_ACCESS_KEY_ID}"
-      - "AWS_SECRET_ACCESS_KEY=${TRAVIS_AWS_SECRET_ACCESS_KEY}"
-      - "DYNAMO_TABLE=${TRAVIS_DYNAMO_TABLE}"
-      - "EMAIL_DOMAIN=${TRAVIS_EMAIL_DOMAIN}"
-      - "REGION=${TRAVIS_REGION}"
-      - "S3_BUCKET=${TRAVIS_S3_BUCKET}"
-    command: >
-           sh -c '
-           ./vendor/bin/phpunit
-           '

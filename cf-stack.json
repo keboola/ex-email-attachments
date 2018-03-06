@@ -3,14 +3,18 @@
   "Parameters" : {
     "KeboolaStack" : {
       "Type" : "String",
-      "Description" : "Name of the stack, used for tagging and resources names"
+      "Description" : "Name of the stack, used for tagging, it should be the same accross all instances, e.g. ex-email-attachments"
+    },
+    "ServiceName" : {
+      "Type" : "String",
+      "Description" : "Name of the instance, used for resources names, it should be unique accross all instances, e.g. dev-ex-email-attachments"
     }
   },
   "Resources": {
     "S3Bucket": {
       "Type": "AWS::S3::Bucket",
       "Properties": {
-        "BucketName": { "Fn::Join" : ["-", [{ "Ref": "KeboolaStack" }, { "Ref" : "AWS::Region" }, "emails"]] },
+        "BucketName": { "Fn::Join" : ["-", [{ "Ref": "ServiceName" }, { "Ref" : "AWS::Region" }, "emails"]] },
         "LifecycleConfiguration": {
           "Rules": [
             {
@@ -50,7 +54,7 @@
     "DynamoTable": {
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
-        "TableName": { "Fn::Join" : ["-", [{ "Ref": "KeboolaStack" }, { "Ref" : "AWS::Region" }, "emails"]] },
+        "TableName": { "Fn::Join" : ["-", [{ "Ref": "ServiceName" }, { "Ref" : "AWS::Region" }, "emails"]] },
         "AttributeDefinitions": [
           {
             "AttributeName": "Project",
@@ -86,7 +90,7 @@
     "IamUser": {
       "Type": "AWS::IAM::User",
       "Properties": {
-        "UserName": { "Fn::Join" : ["-", [{ "Ref": "KeboolaStack" }, { "Ref" : "AWS::Region" }]] },
+        "UserName": { "Fn::Join" : ["-", [{ "Ref": "ServiceName" }, { "Ref" : "AWS::Region" }]] },
         "Policies": [
           {
             "PolicyName": "S3BucketAccess",
