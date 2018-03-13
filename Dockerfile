@@ -18,4 +18,4 @@ WORKDIR /code
 
 RUN composer install
 
-CMD php ./src/run.php run
+CMD php ./src/run.php run /data
