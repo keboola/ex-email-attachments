@@ -26,14 +26,10 @@ class RunAction extends AbstractAction
         $dynamo = $this->initDynamoDb();
         $email = $this->getDbRecord($dynamo, $userConfiguration['kbcProject'], $userConfiguration['config']);
 
-        $this->lastDownloadedFileTimestamp = isset($userConfiguration['state']['lastDownloadedFileTimestamp'])
-            ? $userConfiguration['state']['lastDownloadedFileTimestamp'] : 0;
-        $this->processedFilesInLastTimestampSecond = isset($userConfiguration['state']['processedFilesInLastTimestampSecond'])
-            ? $userConfiguration['state']['processedFilesInLastTimestampSecond'] : [];
-
         $this->temp->initRunFolder();
         $this->s3Client = $this->initS3();
 
+        $this->readState($userConfiguration);
         $filesToDownload = $this->listS3Files($userConfiguration['kbcProject'], $userConfiguration['config']);
 
         // Filter out processed files
@@ -139,12 +135,23 @@ class RunAction extends AbstractAction
         }
     }
 
+    protected function readState($userConfiguration)
+    {
+        $this->lastDownloadedFileTimestamp = isset($userConfiguration['state']['lastDownloadedFileTimestamp'])
+            ? $userConfiguration['state']['lastDownloadedFileTimestamp'] : 0;
+        $this->processedFilesInLastTimestampSecond = isset($userConfiguration['state']['processedFilesInLastTimestampSecond'])
+            ? $userConfiguration['state']['processedFilesInLastTimestampSecond'] : [];
+    }
+
     protected function saveState($userConfiguration)
     {
         $outputStateFile = "{$userConfiguration['outputPath']}/../state.json";
         $jsonEncode = new \Symfony\Component\Serializer\Encoder\JsonEncode();
         file_put_contents($outputStateFile, $jsonEncode->encode(
-            ['lastDownloadedFileTimestamp' => $this->lastDownloadedFileTimestamp],
+            [
+                'lastDownloadedFileTimestamp' => $this->lastDownloadedFileTimestamp,
+                'processedFilesInLastTimestampSecond' => $this->processedFilesInLastTimestampSecond,
+            ],
             JsonEncoder::FORMAT
         ));
     }

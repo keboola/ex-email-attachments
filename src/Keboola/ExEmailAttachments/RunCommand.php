@@ -27,11 +27,11 @@ class RunCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $consoleOutput)
     {
-        $dataDirectory = $input->getArgument('data directory');
+        $dataDirectory = getenv('KBC_DATADIR') === false ? '/data/' : getenv('KBC_DATADIR');
         $config = $this->getConfig($dataDirectory);
 
         try {
-            $outputPath = "$dataDirectory/out/tables";
+            $outputPath = "${dataDirectory}out/tables";
             (new Filesystem())->mkdir([$outputPath]);
 
             $appConfiguration = $this->validateAppConfiguration($config);
@@ -61,7 +61,7 @@ class RunCommand extends Command
 
     protected function getConfig($dataDirectory)
     {
-        $configFile = "$dataDirectory/config.json";
+        $configFile = "${dataDirectory}config.json";
         if (!file_exists($configFile)) {
             throw new \Exception("Config file not found at path $configFile");
         }
@@ -71,7 +71,7 @@ class RunCommand extends Command
 
     protected function getState($dataDirectory)
     {
-        $inputStateFile = "$dataDirectory/in/state.json";
+        $inputStateFile = "${dataDirectory}in/state.json";
         if (file_exists($inputStateFile)) {
             $jsonDecode = new JsonDecode(true);
             return $jsonDecode->decode(file_get_contents($inputStateFile), JsonEncoder::FORMAT);

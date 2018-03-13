@@ -11,7 +11,9 @@ services:
     volumes:
       - ./:/code
     environment:
+      - KBC_CONFIGID
       - KBC_PROJECTID
+      - KBC_DATADIR
 
   test:
     build:
