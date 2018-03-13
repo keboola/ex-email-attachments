@@ -18,15 +18,18 @@ class RunAction extends AbstractAction
 {
     /** @var S3Client */
     protected $s3Client;
-    protected $lastTimestamp;
+    protected $lastDownloadedFileTimestamp;
+    protected $processedFilesInLastTimestampSecond;
 
     public function execute($userConfiguration)
     {
         $dynamo = $this->initDynamoDb();
         $email = $this->getDbRecord($dynamo, $userConfiguration['kbcProject'], $userConfiguration['config']);
 
-        $this->lastTimestamp = isset($userConfiguration['state']['lastDownloadedFileTimestamp'])
+        $this->lastDownloadedFileTimestamp = isset($userConfiguration['state']['lastDownloadedFileTimestamp'])
             ? $userConfiguration['state']['lastDownloadedFileTimestamp'] : 0;
+        $this->processedFilesInLastTimestampSecond = isset($userConfiguration['state']['processedFilesInLastTimestampSecond'])
+            ? $userConfiguration['state']['processedFilesInLastTimestampSecond'] : [];
 
         $this->temp->initRunFolder();
         $this->s3Client = $this->initS3();
@@ -36,10 +39,13 @@ class RunAction extends AbstractAction
         // Filter out processed files
         $filesToDownload = array_filter($filesToDownload, function ($fileToDownload) {
             /** @var DateTimeResult $lastModified */
-            if ($fileToDownload["timestamp"] > $this->lastTimestamp) {
-                return true;
+            if ($fileToDownload['timestamp'] < $this->lastDownloadedFileTimestamp) {
+                return false;
             }
-            return false;
+            if (in_array($fileToDownload['parameters']['Key'], $this->processedFilesInLastTimestampSecond)) {
+                return false;
+            }
+            return true;
         });
 
         $processed = 0;
@@ -103,7 +109,11 @@ class RunAction extends AbstractAction
                 $processedAttachments++;
             }
         }
-        $this->lastTimestamp = max($this->lastTimestamp, $timestamp);
+        if ($this->lastDownloadedFileTimestamp != $timestamp) {
+            $this->processedFilesInLastTimestampSecond = [];
+        }
+        $this->lastDownloadedFileTimestamp = max($this->lastDownloadedFileTimestamp, $timestamp);
+        $this->processedFilesInLastTimestampSecond[] = $fileKey;
         return $processedAttachments;
     }
 
@@ -134,7 +144,7 @@ class RunAction extends AbstractAction
         $outputStateFile = "{$userConfiguration['outputPath']}/../state.json";
         $jsonEncode = new \Symfony\Component\Serializer\Encoder\JsonEncode();
         file_put_contents($outputStateFile, $jsonEncode->encode(
-            ['lastDownloadedFileTimestamp' => $this->lastTimestamp],
+            ['lastDownloadedFileTimestamp' => $this->lastDownloadedFileTimestamp],
             JsonEncoder::FORMAT
         ));
     }
