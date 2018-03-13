@@ -42,7 +42,7 @@ class RunAction extends AbstractAction
             if ($fileToDownload['timestamp'] < $this->lastDownloadedFileTimestamp) {
                 return false;
             }
-            if (in_array($fileToDownload['parameters']['Key'], $this->processedFilesInLastTimestampSecond)) {
+            if (in_array($fileToDownload['key'], $this->processedFilesInLastTimestampSecond)) {
                 return false;
             }
             return true;
