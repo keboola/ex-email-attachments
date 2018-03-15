@@ -82,6 +82,18 @@ class RunAction extends AbstractAction
         }
     }
 
+    public function getAddressFromTo($toAddress)
+    {
+        if ($toAddress[0] == '<' && substr($toAddress, -1) == '>') {
+            // "To" has a format: <name@email.com>
+            $toAddress = substr($toAddress, 1, -1);
+        } elseif ($toAddress[0] == '"' && substr($toAddress, -1) == '>') {
+            // "To" has a format: "Name" <name@email.com>
+            $toAddress = substr($toAddress, strpos($toAddress, '<')+1, -1);
+        }
+        return trim($toAddress);
+    }
+
     public function getS3File($fileKey, $timestamp, $userConfiguration, $email)
     {
         $processedAttachments = 0;
@@ -96,11 +108,7 @@ class RunAction extends AbstractAction
         $parser->saveAttachments($this->temp->getTmpFolder() . '/');
 
         // Check "To" against registered email
-        $toAddress = trim($parser->getHeader('to'));
-        if ($toAddress[0] == '<' && substr($toAddress, -1) == '>') {
-            // "To" has a format: <name@email.com>
-            $toAddress = substr($toAddress, 1, -1);
-        }
+        $toAddress = $this->getAddressFromTo($parser->getHeader('to'));
         if ($toAddress != $email) {
             return 0;
         }
