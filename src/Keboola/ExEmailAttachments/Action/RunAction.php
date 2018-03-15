@@ -94,7 +94,14 @@ class RunAction extends AbstractAction
         ]);
         $parser->setPath($tempFile);
         $parser->saveAttachments($this->temp->getTmpFolder() . '/');
-        if ($parser->getHeader('to') != $email) {
+
+        // Check "To" against registered email
+        $toAddress = trim($parser->getHeader('to'));
+        if ($toAddress[0] == '<' && substr($toAddress, -1) == '>') {
+            // "To" has a format: <name@email.com>
+            $toAddress = substr($toAddress, 1, -1);
+        }
+        if ($toAddress != $email) {
             return 0;
         }
 
