@@ -82,16 +82,24 @@ class RunAction extends AbstractAction
         }
     }
 
-    public function getAddressFromTo($toAddress)
+    public function checkEmailInRecipients($fields, $email)
     {
-        if ($toAddress[0] == '<' && substr($toAddress, -1) == '>') {
-            // "To" has a format: <name@email.com>
-            $toAddress = substr($toAddress, 1, -1);
-        } elseif ($toAddress[0] == '"' && substr($toAddress, -1) == '>') {
-            // "To" has a format: "Name" <name@email.com>
-            $toAddress = substr($toAddress, strpos($toAddress, '<')+1, -1);
+        foreach ($fields as $field) {
+            foreach (explode(',', $field) as $item) {
+                $address = trim($item);
+                if ($address[0] == '<' && substr($address, -1) == '>') {
+                    // "To" has a format: <name@email.com>
+                    $address = substr($address, 1, -1);
+                } elseif ($address[0] == '"' && substr($address, -1) == '>') {
+                    // "To" has a format: "Name" <name@email.com>
+                    $address = substr($address, strpos($address, '<') + 1, -1);
+                }
+                if (trim($address) == $email) {
+                    return true;
+                }
+            }
         }
-        return trim($toAddress);
+        return false;
     }
 
     public function getS3File($fileKey, $timestamp, $userConfiguration, $email)
@@ -107,9 +115,11 @@ class RunAction extends AbstractAction
         $parser->setPath($tempFile);
         $parser->saveAttachments($this->temp->getTmpFolder() . '/');
 
-        // Check "To" against registered email
-        $toAddress = $this->getAddressFromTo($parser->getHeader('to'));
-        if ($toAddress != $email) {
+        if (!$this->checkEmailInRecipients([
+            $parser->getHeader('to'),
+            $parser->getHeader('cc'),
+            $parser->getHeader('bcc'),
+        ], $email)) {
             return 0;
         }
 

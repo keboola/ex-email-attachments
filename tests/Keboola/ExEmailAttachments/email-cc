@@ -1,0 +1,146 @@
+Return-Path: <test@keboola.com>
+Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com [74.125.82.46])
+ by inbound-smtp.eu-west-1.amazonaws.com with SMTP id f3u5akod30enk979a0s57vep6b9ourvlv4985f01
+ for 313-5a392b308694a@import.test.keboola.com;
+ Tue, 19 Dec 2017 15:07:54 +0000 (UTC)
+Received-SPF: permerror (spfCheck: Error in processing SPF Record) client-ip=74.125.82.46; envelope-from=test@keboola.com; helo=mail-wm0-f46.google.com;
+Authentication-Results: amazonses.com;
+ spf=permerror (spfCheck: Error in processing SPF Record) client-ip=74.125.82.46; envelope-from=test@keboola.com; helo=mail-wm0-f46.google.com;
+ dkim=pass header.i=@keboola-com.20150623.gappssmtp.com;
+X-SES-RECEIPT: AEFBQUFBQUFBQUFHYnRpQUpKeEtiSU1YQ0k0MzlPeEU0bmFid2RpR0R0RXJ2aGpIamlRNzRaSklZK0FLeVZzQ0ZFaE9XakhWdHhVcFNBS2tpckYvSDliVHM2RlgrdWd5bEMza054bG05OEt1NmdwV1l5YjVXRkcrK2hnMHpWMEFnNmdWNDBOTmw3SjlvU1Z0cW5wSWdqenhzM0ZoUkJoODErMlpWdm5MRmpFRFJTeEkxeHVxZStjOXc2WjNNbXVWZUtWVkxyS0FuVWltQUdqQzNseVVNWXd2U0tObmJRSDRBcVdpVkd3cTF0T2FWRmpBS0N3NmN4QU1KdGJRbDhnaW9KMzdZWUYwRnZ0M3VCMEZEcFlocVZUVXhTTlhKZTd5R2pFQUdOTlI4SU1rZmRsMzRoRTZCdWR4eEVQcExURW5aN0JWdEVZWDJjSjQ9
+X-SES-DKIM-SIGNATURE: a=rsa-sha256; q=dns/txt; b=OK6DWDU4FuKzyUzM48iKFx+92yKtEWg4Rk5fQo4BlGuG0QqZeMGoiLrIB1InH2Pul6MDGrFE0uL8aqYWfilZDVD+GK6nUqCuD4R9ggpG8qgPZTQG+qAmWRbcdKhKw/dqgM763Io0WxxIMjLPPSEvvPskLdkq2XaqeGUig0NGQ+U=; c=relaxed/simple; s=shh3fegwg5fppqsuzphvschd53n6ihuv; d=amazonses.com; t=1513696075; v=1; bh=aTQnkumdtbJiGBBLqD5F+fjlo83C4AjUxH6S7gDFayw=; h=From:To:Cc:Bcc:Subject:Date:Message-ID:MIME-Version:Content-Type:X-SES-RECEIPT;
+Received: by mail-wm0-f46.google.com with SMTP id y82so11788759wmg.1
+        for <313-5a392b308694a@import.test.keboola.com>; Tue, 19 Dec 2017 07:07:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=keboola-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:message-id:in-reply-to:references:subject:mime-version;
+        bh=7pOt0o+zUj7JntCkM0QXIgbACeye97ijWcI3/Qot1IM=;
+        b=ABz37TqAuxTgN3t2sxSS7rim28FM3mAVQ8wPQMmwqiUbNPutQ4KyfxV6+oVZ70N66X
+         eYgiEUhW8lGOXXwwzby0Eks1aT08E/QwsVqJriwtcsG4ciRDKZyZ8JW02GWD5goU6Lun
+         J1ebQnY9rdjwJozOBzt5Rl9caGroD1EZqQZ5JS87bAXBxJnPVhbf+SIXP9XM3pq6aBoB
+         pAuaohSz5jYnQhqSvWNmAmJX6nwwpxJDcRJEN6NxKc/kD1Y1AbzUdEWX59n2rLoZehYV
+         l/v5ZlLU0YiK6/oH7dzdHL6ux0jfEkv2s/v/tkbtBwmvPQ73LMtucq2t3Tnbasuwo/bJ
+         12mw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:message-id:in-reply-to:references
+         :subject:mime-version;
+        bh=7pOt0o+zUj7JntCkM0QXIgbACeye97ijWcI3/Qot1IM=;
+        b=lkCsQDTOe2+oNlLMHBSodgkE9M4L9GBvh6KRWtP+oDn3KPZyV9tIxeRFJ+bjanPfW7
+         uYw8/e+5VwLvEYxmJPWkclXZNZYhLPmyERb/H2hpToUPuDNWBbnj2TIxisrWH1O0X8ae
+         +B0ncnr6q302nVTkUYZ1VJvCwCFfYlyQ+Bi3GuJ70Lva4RJ4UAzCVmLWZDeym4bZA+NM
+         qwy8Kvi5gWpe6Vqx3JiMdLBQpDuEFBwsR3IQaNeC30rAjVcnah00AAXfZip7DNPEYWge
+         Ym/9ukbe58imPocdNgoluTLRdPc3KjEIs9uaG8L00Bg11hsUdfeH4/J8xFuYneF8dd65
+         qbCA==
+X-Gm-Message-State: AKGB3mKFQAKDdzChOOZNkK6vOquCmpU6R38aWqw36uTVe4MpPrPCo+ir
+	wWDAYIqk5fWr2Ehrdx/KlAEW+zeYkX+C8A==
+X-Google-Smtp-Source: ACJfBovoyjehirHb7vbDcR7vqqEf0JXreLN0Z5QmwLIFk5rMC6+HebFs71+mYoNLHdhXBAxZEqa3MQ==
+X-Received: by 10.80.170.136 with SMTP id q8mr980128edc.134.1513696074144;
+        Tue, 19 Dec 2017 07:07:54 -0800 (PST)
+Return-Path: <test@keboola.com>
+Received: from [10.0.1.8] (ip-78-45-129-24.net.upcbroadband.cz. [78.45.129.24])
+        by smtp.gmail.com with ESMTPSA id t23sm13503149edb.70.2017.12.19.07.07.51
+        for <313-5a392b308694a@import.test.keboola.com>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 19 Dec 2017 07:07:52 -0800 (PST)
+Date: Tue, 19 Dec 2017 16:07:40 +0100
+From: Test <test@keboola.com>
+To: Test <test@keboola.com>
+CC: "Test User"
+	<{{EMAIL}}>
+Message-ID: <7bac924c-d316-4379-9497-486c8712e039@Spark>
+In-Reply-To: <b5ab5b8d-9b84-4f9c-a43f-3c79ced6e2cc@Spark>
+References: <9bebd73c-544d-4e31-a7b4-7c8d3d6c5d3d@Spark>
+ <0f85e001-ae01-4c6e-aa87-7a6ea0306bfb@Spark>
+ <06c62dc0-2d59-4d85-9940-7bbae1d4a4ee@Spark>
+ <fe9e96b9-dcfe-449f-b28d-8195d8a3b4ff@Spark>
+ <cd4902ed-2c45-44fc-bada-b15cc0ade175@Spark>
+ <9c29aeec-63a3-4e8e-9020-8eacb5d12b99@Spark>
+ <b5ab5b8d-9b84-4f9c-a43f-3c79ced6e2cc@Spark>
+Subject: test
+X-Readdle-Message-ID: 7bac924c-d316-4379-9497-486c8712e039@Spark
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="5a392b45_625558ec_449"
+
+--5a392b45_625558ec_449
+Content-Type: multipart/alternative; boundary="5a392b45_2ae8944a_449"
+
+--5a392b45_2ae8944a_449
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+Sending the test file..
+
+
+--5a392b45_2ae8944a_449
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+<html xmlns=3D=22http://www.w3.org/1999/xhtml=22>
+<head>
+<title></title>
+</head>
+<body>
+<div name=3D=22messageBodySection=22 style=3D=22font-size: 14px; font-fam=
+ily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22>Sending the test=
+ file..</div>
+<div name=3D=22messageReplySection=22 style=3D=22font-size: 14px; font-fa=
+mily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22><br />
+<blockquote type=3D=22cite=22 style=3D=22margin: 5px 5px; padding-left: 1=
+0px; border-left: thin solid =231abc9c;=22>
+<div name=3D=22messageReplySection=22 style=3D=22font-size: 14px; font-fa=
+mily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22>
+<blockquote type=3D=22cite=22 style=3D=22margin: 5px 5px; padding-left: 1=
+0px; border-left: thin solid =23e67e22;=22>
+<div name=3D=22messageReplySection=22 style=3D=22font-size: 14px; font-fa=
+mily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22>
+<blockquote type=3D=22cite=22 style=3D=22margin: 5px 5px; padding-left: 1=
+0px; border-left: thin solid =233498db;=22>
+<div name=3D=22messageReplySection=22 style=3D=22font-size: 14px; font-fa=
+mily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22>
+<blockquote type=3D=22cite=22 style=3D=22margin: 5px 5px; padding-left: 1=
+0px; border-left: thin solid =23d35400;=22>
+<div name=3D=22messageReplySection=22 style=3D=22font-size: 14px; font-fa=
+mily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22>
+<blockquote type=3D=22cite=22 style=3D=22margin: 5px 5px; padding-left: 1=
+0px; border-left: thin solid =2334495e;=22>
+<div name=3D=22messageReplySection=22 style=3D=22font-size: 14px; font-fa=
+mily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22>
+<blockquote type=3D=22cite=22 style=3D=22margin: 5px 5px; padding-left: 1=
+0px; border-left: thin solid =232ecc71;=22>
+<div name=3D=22messageReplySection=22 style=3D=22font-size: 14px; font-fa=
+mily: -apple-system, BlinkMacSystem=46ont, sans-serif;=22>
+<blockquote type=3D=22cite=22 style=3D=22margin: 5px 5px; padding-left: 1=
+0px; border-left: thin solid =239b59b6;=22></blockquote>
+</div>
+</blockquote>
+</div>
+</blockquote>
+</div>
+</blockquote>
+</div>
+</blockquote>
+</div>
+</blockquote>
+</div>
+</blockquote>
+</div>
+</body>
+</html>
+
+--5a392b45_2ae8944a_449--
+
+--5a392b45_625558ec_449
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="=?utf-8?Q?out.c=5Fmain.categories.csv?="
+
+ImlkIiwibmFtZSIsIm9yZGVyIgoiYzEiLCJDYXRlZ29yeSAxIiwiMSIKImMyIiwiQ2F0ZWdvcnkg
+MiIsIjIiCiJjMyIsIkNhdGVnb3J5IDMiLCIzIgoiYzQiLCJDYXRlZ29yeSA0IiwiNCIKImM1Iiwi
+Q2F0ZWdvcnkgNSIsIjUiCg==
+
+--5a392b45_625558ec_449--
+

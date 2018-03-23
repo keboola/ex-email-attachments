@@ -28,7 +28,7 @@ class RunTest extends AbstractTest
         $config = uniqid();
         $email = "{$this->project}-{$config}-{$id}@" . EMAIL_DOMAIN;
 
-        $emailBody = str_replace('{{EMAIL}}', $email, file_get_contents(__DIR__ . '/email'));
+        $emailBody = str_replace('{{EMAIL}}', $email, file_get_contents(__DIR__ . '/../email'));
         $this->s3->putObject([
             'Bucket' => S3_BUCKET,
             'Key' => "{$this->project}/{$config}/{$id}0",
