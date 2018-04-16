@@ -9,6 +9,7 @@ namespace Keboola\ExEmailAttachments\Tests\Unit;
 
 use Keboola\ExEmailAttachments\Action\RunAction;
 use Keboola\Temp\Temp;
+use PhpMimeMailParser\Parser;
 
 class RunActionTest extends \PHPUnit\Framework\TestCase
 {
@@ -48,5 +49,47 @@ class RunActionTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue($this->runAction->checkEmailInRecipients(["<{$this->email}> "], $this->email));
         $this->assertTrue($this->runAction->checkEmailInRecipients(["\"\" <{$this->email}>"], $this->email));
         $this->assertTrue($this->runAction->checkEmailInRecipients(["\"Test\" <{$this->email}>"], $this->email));
+    }
+
+    public function testCheckEmailInRecipientsWithParserCc()
+    {
+        $id = uniqid();
+        $config = uniqid();
+        $email = "771-367243369-5aaa21c4ae622@import.keboola.com";
+        $tempFile = $this->temp->createTmpFile()->getRealPath();
+        file_put_contents(
+            $tempFile,
+            str_replace('{{EMAIL}}', $email, file_get_contents(__DIR__ . '/../email-cc'))
+        );
+
+        $parser = new Parser();
+        $parser->setPath($tempFile);
+
+        $this->assertTrue($this->runAction->checkEmailInRecipients([
+            $parser->getHeader('to'),
+            $parser->getHeader('cc'),
+            $parser->getHeader('bcc'),
+        ], $email));
+    }
+
+    public function testCheckEmailInRecipientsWithParserMultipleTo()
+    {
+        $id = uniqid();
+        $config = uniqid();
+        $email = "{$this->project}-{$config}-{$id}@" . EMAIL_DOMAIN;
+        $tempFile = $this->temp->createTmpFile()->getRealPath();
+        file_put_contents(
+            $tempFile,
+            str_replace('{{EMAIL}}', $email, file_get_contents(__DIR__ . '/../email-multiple-to'))
+        );
+
+        $parser = new Parser();
+        $parser->setPath($tempFile);
+
+        $this->assertTrue($this->runAction->checkEmailInRecipients([
+            $parser->getHeader('to'),
+            $parser->getHeader('cc'),
+            $parser->getHeader('bcc'),
+        ], $email));
     }
 }

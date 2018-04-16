@@ -85,16 +85,8 @@ class RunAction extends AbstractAction
     public function checkEmailInRecipients($fields, $email)
     {
         foreach ($fields as $field) {
-            foreach (explode(',', $field) as $item) {
-                $address = trim($item);
-                if ($address[0] == '<' && substr($address, -1) == '>') {
-                    // "To" has a format: <name@email.com>
-                    $address = substr($address, 1, -1);
-                } elseif ($address[0] == '"' && substr($address, -1) == '>') {
-                    // "To" has a format: "Name" <name@email.com>
-                    $address = substr($address, strpos($address, '<') + 1, -1);
-                }
-                if (trim($address) == $email) {
+            foreach (mailparse_rfc822_parse_addresses($field) as $item) {
+                if (trim($item['address']) == $email) {
                     return true;
                 }
             }

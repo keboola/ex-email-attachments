@@ -49,6 +49,9 @@ To: "Test1, Test2 / Test + Test3 / PRG ZV-C"
 	<user1@test.com>, Name Surname
 	<user2@test3.com>, "Importer"
 	<{{EMAIL}}>
+CC: "ccuser1@test.com" <ccuser1@test.com>, "User2, Name / John +
+ Jack / User Group" <group1@test.com>, "Doe, John / Tom +
+ Jerry / Name ZV-K" <jerry@test.com>
 Message-ID: <7bac924c-d316-4379-9497-486c8712e039@Spark>
 In-Reply-To: <b5ab5b8d-9b84-4f9c-a43f-3c79ced6e2cc@Spark>
 References: <9bebd73c-544d-4e31-a7b4-7c8d3d6c5d3d@Spark>
