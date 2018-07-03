@@ -53,8 +53,6 @@ class RunActionTest extends \PHPUnit\Framework\TestCase
 
     public function testCheckEmailInRecipientsWithParserCc()
     {
-        $id = uniqid();
-        $config = uniqid();
         $email = "771-367243369-5aaa21c4ae622@import.keboola.com";
         $tempFile = $this->temp->createTmpFile()->getRealPath();
         file_put_contents(
@@ -91,5 +89,21 @@ class RunActionTest extends \PHPUnit\Framework\TestCase
             $parser->getHeader('cc'),
             $parser->getHeader('bcc'),
         ], $email));
+    }
+
+    public function testSaveFileWithMultipleAttachments()
+    {
+        $parser = new Parser();
+        $parser->setPath(__DIR__ . '/../email-with-image');
+        $parser->saveAttachments($this->temp->getTmpFolder() . '/');
+
+        $userConfig = ['outputPath' => $this->temp->getTmpFolder()];
+        $attachments = $parser->getAttachments();
+
+        // First file is an image so it should be ignored
+        $this->assertEmpty($this->runAction->saveFile($userConfig, $attachments[0]));
+
+        // Second file is a csv so its name should be returned
+        $this->assertStringStartsWith('test.csv', $this->runAction->saveFile($userConfig, $attachments[1]));
     }
 }

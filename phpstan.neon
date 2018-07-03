@@ -1,0 +1,3 @@
+parameters:
+    ignoreErrors:
+        - '#mailparse_rfc822_parse_addresses#'
