@@ -71,8 +71,9 @@ class RunTest extends AbstractTest
             $this->temp
         );
         $dataFolder = '/data/out/tables';
-        $this->assertArrayHasKey('processedAttachments', $result);
-        $this->assertEquals(1, $result['processedAttachments']);
+        $this->assertArrayHasKey('test@keboola.com', $result);
+        $this->assertCount(1, $result['test@keboola.com']);
+        $this->assertStringStartsWith('out.c_main.categories.csv', $result['test@keboola.com'][0]);
         $this->assertDirectoryExists($dataFolder);
         $this->assertFileExists("$dataFolder/data.csv");
         $csv = file("$dataFolder/data.csv");

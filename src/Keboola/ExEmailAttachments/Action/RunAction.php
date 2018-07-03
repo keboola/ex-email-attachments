@@ -44,7 +44,7 @@ class RunAction extends AbstractAction
             return true;
         });
 
-        $processed = 0;
+        $processed = [];
         foreach ($filesToDownload as $fileToDownload) {
             $processed += $this->getS3File(
                 $fileToDownload['key'],
@@ -54,7 +54,7 @@ class RunAction extends AbstractAction
             );
         }
         $this->saveState($userConfiguration);
-        return ['processedAttachments' => $processed];
+        return $processed;
     }
 
     protected function listS3Files($kbcProject, $config)
@@ -82,13 +82,20 @@ class RunAction extends AbstractAction
         }
     }
 
+    public function getAddressesFromEmailField($field)
+    {
+        $result = [];
+        foreach (mailparse_rfc822_parse_addresses($field) as $item) {
+            $result[] = trim($item['address']);
+        }
+        return $result;
+    }
+
     public function checkEmailInRecipients($fields, $email)
     {
         foreach ($fields as $field) {
-            foreach (mailparse_rfc822_parse_addresses($field) as $item) {
-                if (trim($item['address']) == $email) {
-                    return true;
-                }
+            if (in_array($email, $this->getAddressesFromEmailField($field))) {
+                return true;
             }
         }
         return false;
@@ -96,7 +103,6 @@ class RunAction extends AbstractAction
 
     public function getS3File($fileKey, $timestamp, $userConfiguration, $email)
     {
-        $processedAttachments = 0;
         $parser = new Parser();
         $tempFile = $this->temp->createTmpFile()->getRealPath();
         $this->s3Client->getObject([
@@ -112,14 +118,17 @@ class RunAction extends AbstractAction
             $parser->getHeader('cc'),
             $parser->getHeader('bcc'),
         ], $email)) {
-            return 0;
+            return [];
         }
 
+        $processed = [];
         $attachments = $parser->getAttachments();
         if (count($attachments) > 0) {
             foreach ($attachments as $attachment) {
-                $this->saveFile($userConfiguration, $attachment);
-                $processedAttachments++;
+                $file = $this->saveFile($userConfiguration, $attachment);
+                if ($file) {
+                    $processed[] = $file;
+                }
             }
         }
         if ($this->lastDownloadedFileTimestamp != $timestamp) {
@@ -127,13 +136,17 @@ class RunAction extends AbstractAction
         }
         $this->lastDownloadedFileTimestamp = max($this->lastDownloadedFileTimestamp, $timestamp);
         $this->processedFilesInLastTimestampSecond[] = $fileKey;
-        return $processedAttachments;
+        return [$this->getAddressesFromEmailField($parser->getHeader('From'))[0] => $processed];
     }
 
-    protected function saveFile($userConfiguration, Attachment $attachment)
+    public function saveFile($userConfiguration, Attachment $attachment)
     {
-        $fileName = "{$userConfiguration['outputPath']}/data.csv";
-        rename("{$this->temp->getTmpFolder()}/{$attachment->getFilename()}", $fileName);
+        $oldFileName = "{$this->temp->getTmpFolder()}/{$attachment->getFilename()}";
+        if (substr(mime_content_type($oldFileName), 0, 5) !== 'text/') {
+            return null;
+        }
+        $newFileName = "{$userConfiguration['outputPath']}/data.csv";
+        rename($oldFileName, $newFileName);
         $manifest = [];
         if (isset($userConfiguration['incremental'])) {
             $manifest['incremental'] = (bool)$userConfiguration['incremental'];
@@ -148,8 +161,9 @@ class RunAction extends AbstractAction
             $manifest['primary_key'] = $userConfiguration['primaryKey'];
         }
         if ($manifest) {
-            file_put_contents("$fileName.manifest", json_encode($manifest));
+            file_put_contents("$newFileName.manifest", json_encode($manifest));
         }
+        return $attachment->getFilename(). '(' . filesize($newFileName) . ' B)';
     }
 
     protected function readState($userConfiguration)
