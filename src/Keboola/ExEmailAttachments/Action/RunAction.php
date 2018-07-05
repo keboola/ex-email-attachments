@@ -1,17 +1,16 @@
 <?php
-/**
- * @package ex-email-attachments
- * @copyright 2017 Keboola
- * @author Jakub Matejka <jakub@keboola.com>
- */
 
 namespace Keboola\ExEmailAttachments\Action;
 
 use Aws\Api\DateTimeResult;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
-use PhpMimeMailParser\Attachment;
+use Keboola\ExEmailAttachments\Exception\EmailException;
+use Keboola\ExEmailAttachments\Exception\InvalidEmailRecipientException;
+use Keboola\ExEmailAttachments\Exception\MoreAttachmentsInEmailException;
+use Keboola\ExEmailAttachments\Exception\NoAttachmentInEmailException;
 use PhpMimeMailParser\Parser;
+use Symfony\Component\Process\Process;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 
 class RunAction extends AbstractAction
@@ -21,10 +20,10 @@ class RunAction extends AbstractAction
     protected $lastDownloadedFileTimestamp;
     protected $processedFilesInLastTimestampSecond;
 
-    public function execute($userConfiguration)
+    public function execute(array $userConfiguration)
     {
         $dynamo = $this->initDynamoDb();
-        $email = $this->getDbRecord($dynamo, $userConfiguration['kbcProject'], $userConfiguration['config']);
+        $emailRecipient = $this->getDbRecord($dynamo, $userConfiguration['kbcProject'], $userConfiguration['config']);
 
         $this->temp->initRunFolder();
         $this->s3Client = $this->initS3();
@@ -44,17 +43,18 @@ class RunAction extends AbstractAction
             return true;
         });
 
-        $processed = [];
+        $csvFiles = [];
         foreach ($filesToDownload as $fileToDownload) {
-            $processed += $this->getS3File(
-                $fileToDownload['key'],
-                $fileToDownload['timestamp'],
-                $userConfiguration,
-                $email
-            );
+            try {
+                $csvFiles[] = $this->downloadAttachmentFromS3File($fileToDownload['key'], $emailRecipient);
+                $this->updateState($fileToDownload['key'], $fileToDownload['timestamp']);
+            } catch (EmailException $e) {
+                $this->consoleOutput->writeln($e->getMessage());
+            }
         }
+
+        $this->saveFiles($userConfiguration, $csvFiles);
         $this->saveState($userConfiguration);
-        return $processed;
     }
 
     protected function listS3Files($kbcProject, $config)
@@ -82,7 +82,25 @@ class RunAction extends AbstractAction
         }
     }
 
-    public function getAddressesFromEmailField($field)
+    public function downloadAttachmentFromS3File(string $fileKey, string $emailRecipient) : string
+    {
+        $tempFile = $this->downloadS3File($fileKey);
+        $parser = $this->parseEmailFromS3File($tempFile, $emailRecipient);
+        return $this->getTextAttachment($parser);
+    }
+
+    public function downloadS3File(string $fileKey) : string
+    {
+        $tempFile = $this->temp->createTmpFile()->getRealPath();
+        $this->s3Client->getObject([
+            'Bucket' => $this->appConfiguration['bucket'],
+            'Key' => $fileKey,
+            'SaveAs' => $tempFile,
+        ]);
+        return $tempFile;
+    }
+
+    public function getAddressesFromEmailField(string $field) : array
     {
         $result = [];
         foreach (mailparse_rfc822_parse_addresses($field) as $item) {
@@ -91,7 +109,7 @@ class RunAction extends AbstractAction
         return $result;
     }
 
-    public function checkEmailInRecipients($fields, $email)
+    public function checkEmailInRecipients(array $fields, string $email) : bool
     {
         foreach ($fields as $field) {
             if (in_array($email, $this->getAddressesFromEmailField($field))) {
@@ -101,53 +119,78 @@ class RunAction extends AbstractAction
         return false;
     }
 
-    public function getS3File($fileKey, $timestamp, $userConfiguration, $email)
+    public function parseEmailFromS3File(string $tempFile, string $emailRecipient) : Parser
     {
         $parser = new Parser();
-        $tempFile = $this->temp->createTmpFile()->getRealPath();
-        $this->s3Client->getObject([
-            'Bucket' => $this->appConfiguration['bucket'],
-            'Key' => $fileKey,
-            'SaveAs' => $tempFile,
-        ]);
         $parser->setPath($tempFile);
         $parser->saveAttachments($this->temp->getTmpFolder() . '/');
-
         if (!$this->checkEmailInRecipients([
             $parser->getHeader('to'),
             $parser->getHeader('cc'),
             $parser->getHeader('bcc'),
-        ], $email)) {
-            return [];
+        ], $emailRecipient)) {
+            throw new InvalidEmailRecipientException($this->getFromAndDateClause($parser) . ' has invalid recipient.');
         }
 
-        $processed = [];
-        $attachments = $parser->getAttachments();
-        if (count($attachments) > 0) {
-            foreach ($attachments as $attachment) {
-                $file = $this->saveFile($userConfiguration, $attachment);
-                if ($file) {
-                    $processed[] = $file;
-                }
-            }
-        }
-        if ($this->lastDownloadedFileTimestamp != $timestamp) {
-            $this->processedFilesInLastTimestampSecond = [];
-        }
-        $this->lastDownloadedFileTimestamp = max($this->lastDownloadedFileTimestamp, $timestamp);
-        $this->processedFilesInLastTimestampSecond[] = $fileKey;
-        return [$this->getAddressesFromEmailField($parser->getHeader('From'))[0] => $processed];
+        return $parser;
     }
 
-    public function saveFile($userConfiguration, Attachment $attachment)
+    public function getFromAndDateClause(Parser $parser) : string
     {
-        $oldFileName = "{$this->temp->getTmpFolder()}/{$attachment->getFilename()}";
-        if (substr(mime_content_type($oldFileName), 0, 5) !== 'text/') {
-            return null;
+        $date = $parser->getHeader('Date');
+        $from = $this->getAddressesFromEmailField($parser->getHeader('From'))[0];
+        return "Email sent by $from received on $date";
+    }
+
+    public function getTextAttachment(Parser $parser) : string
+    {
+        $result = null;
+        $attachments = $parser->getAttachments();
+        foreach ($attachments as $attachment) {
+            $file = "{$this->temp->getTmpFolder()}/{$attachment->getFilename()}";
+            if (substr(mime_content_type($file), 0, 5) === 'text/') {
+                if ($result) {
+                    throw new MoreAttachmentsInEmailException($this->getFromAndDateClause($parser) . ' has more than one text attachment.');
+                }
+                $result = $file;
+            }
         }
-        $newFileName = "{$userConfiguration['outputPath']}/data.csv";
-        rename($oldFileName, $newFileName);
-        $manifest = [];
+        if (!$result) {
+            throw new NoAttachmentInEmailException($this->getFromAndDateClause($parser) . ' has no text attachment.');
+        }
+
+        $this->consoleOutput->writeln($this->getFromAndDateClause($parser) . ' was processed and saved a csv file with size ' . filesize($result));
+        return $result;
+    }
+
+    public function saveFiles(array $userConfiguration, array $files) : void
+    {
+        if (!count($files)) {
+            $this->consoleOutput->writeln('No emails processed.');
+            return;
+        }
+
+        // Get header from first file
+        $firstFileHandle = fopen($files[0], 'r');
+        $firstFileHeader = fgetcsv($firstFileHandle);
+        fclose($firstFileHandle);
+
+        foreach ($files as $i => $file) {
+            if (!file_exists("{$userConfiguration['outputPath']}/data.csv")) {
+                mkdir("{$userConfiguration['outputPath']}/data.csv");
+            }
+            // Remove headers from files to save them as slices
+            $newFileName = "{$userConfiguration['outputPath']}/data.csv/{$i}";
+            $process = new Process("tail -n +2 $file > $newFileName");
+            $process->run();
+        }
+
+        $this->saveManifest($userConfiguration, $firstFileHeader);
+    }
+
+    public function saveManifest(array $userConfiguration, array $columns) : void
+    {
+        $manifest = ['columns' => $columns];
         if (isset($userConfiguration['incremental'])) {
             $manifest['incremental'] = (bool)$userConfiguration['incremental'];
         }
@@ -160,13 +203,10 @@ class RunAction extends AbstractAction
         if (!empty($userConfiguration['primaryKey'])) {
             $manifest['primary_key'] = $userConfiguration['primaryKey'];
         }
-        if ($manifest) {
-            file_put_contents("$newFileName.manifest", json_encode($manifest));
-        }
-        return $attachment->getFilename(). '(' . filesize($newFileName) . ' B)';
+        file_put_contents("{$userConfiguration['outputPath']}/data.csv.manifest", json_encode($manifest));
     }
 
-    protected function readState($userConfiguration)
+    protected function readState(array $userConfiguration) : void
     {
         $this->lastDownloadedFileTimestamp = isset($userConfiguration['state']['lastDownloadedFileTimestamp'])
             ? $userConfiguration['state']['lastDownloadedFileTimestamp'] : 0;
@@ -174,7 +214,16 @@ class RunAction extends AbstractAction
             ? $userConfiguration['state']['processedFilesInLastTimestampSecond'] : [];
     }
 
-    protected function saveState($userConfiguration)
+    protected function updateState($fileKey, $timestamp) : void
+    {
+        if ($this->lastDownloadedFileTimestamp != $timestamp) {
+            $this->processedFilesInLastTimestampSecond = [];
+        }
+        $this->lastDownloadedFileTimestamp = max($this->lastDownloadedFileTimestamp, $timestamp);
+        $this->processedFilesInLastTimestampSecond[] = $fileKey;
+    }
+
+    protected function saveState(array $userConfiguration) : void
     {
         $outputStateFile = "{$userConfiguration['outputPath']}/../state.json";
         $jsonEncode = new \Symfony\Component\Serializer\Encoder\JsonEncode();

@@ -7,7 +7,7 @@
 
 namespace Keboola\ExEmailAttachments\Action;
 
-use Keboola\ExEmailAttachments\Exception;
+use Keboola\ExEmailAttachments\Exception\Exception;
 
 class GetAction extends AbstractAction
 {

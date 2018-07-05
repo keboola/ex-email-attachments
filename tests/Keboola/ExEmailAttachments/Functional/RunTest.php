@@ -1,27 +1,12 @@
 <?php
-/**
- * @package ex-email-attachments
- * @copyright 2017 Keboola
- * @author Jakub Matejka <jakub@keboola.com>
- */
 
 namespace Keboola\ExEmailAttachments\Tests\Functional;
 
 use Keboola\ExEmailAttachments\App;
-use Keboola\ExEmailAttachments\Exception;
+use Symfony\Component\Console\Output\NullOutput;
 
 class RunTest extends AbstractTest
 {
-    public function testRunInvalidEmail()
-    {
-        $this->expectException(Exception::class);
-        App::execute(
-            $this->appConfiguration,
-            ['action' => 'run', 'kbcProject' => $this->project, 'config' => uniqid(), 'email' => uniqid()],
-            $this->temp
-        );
-    }
-
     public function testRunOk()
     {
         $id = uniqid();
@@ -54,7 +39,7 @@ class RunTest extends AbstractTest
             ],
         ]);
 
-        $result = App::execute(
+        App::execute(
             $this->appConfiguration,
             [
                 'action' => 'run',
@@ -68,24 +53,29 @@ class RunTest extends AbstractTest
                 'primaryKey' => ['id'],
                 'state' => ['lastDownloadedFileTimestamp' => $lastDownloadedFileTimestamp],
             ],
-            $this->temp
+            $this->temp,
+            new NullOutput()
         );
         $dataFolder = '/data/out/tables';
-        $this->assertArrayHasKey('test@keboola.com', $result);
-        $this->assertCount(1, $result['test@keboola.com']);
-        $this->assertStringStartsWith('out.c_main.categories.csv', $result['test@keboola.com'][0]);
         $this->assertDirectoryExists($dataFolder);
-        $this->assertFileExists("$dataFolder/data.csv");
-        $csv = file("$dataFolder/data.csv");
-        $this->assertCount(6, $csv);
-        $this->assertEquals('"id","name","order"', trim($csv[0]));
+
         $this->assertFileExists("$dataFolder/data.csv.manifest");
         $manifest = json_decode(file_get_contents("$dataFolder/data.csv.manifest"), true);
         $this->assertArrayHasKey('incremental', $manifest);
         $this->assertArrayHasKey('enclosure', $manifest);
         $this->assertArrayHasKey('delimiter', $manifest);
+        $this->assertArrayHasKey('columns', $manifest);
         $this->assertEquals(true, $manifest['incremental']);
         $this->assertEquals('"', $manifest['enclosure']);
         $this->assertEquals(',', $manifest['delimiter']);
+        $this->assertEquals(['id', 'name', 'order'], $manifest['columns']);
+
+        $this->assertDirectoryExists("$dataFolder/data.csv");
+        $csvFiles = glob("$dataFolder/data.csv/*");
+        $this->assertCount(1, $csvFiles);
+
+        $file1 = file($csvFiles[0]);
+        $this->assertCount(5, $file1);
+        $this->assertEquals('"c1","Category 1","1"', trim($file1[0]));
     }
 }

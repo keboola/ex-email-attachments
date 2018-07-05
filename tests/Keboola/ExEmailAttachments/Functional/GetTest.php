@@ -8,6 +8,7 @@
 namespace Keboola\ExEmailAttachments\Tests\Functional;
 
 use Keboola\ExEmailAttachments\App;
+use Symfony\Component\Console\Output\NullOutput;
 
 class GetTest extends AbstractTest
 {
@@ -17,7 +18,8 @@ class GetTest extends AbstractTest
         $result = App::execute(
             $this->appConfiguration,
             ['action' => 'get', 'kbcProject' => $this->project, 'config' => $config],
-            $this->temp
+            $this->temp,
+            new NullOutput()
         );
         $this->assertArrayHasKey('email', $result);
         $this->assertStringStartsWith($this->project, $result['email']);
@@ -50,7 +52,8 @@ class GetTest extends AbstractTest
         $result2 = App::execute(
             $this->appConfiguration,
             ['action' => 'get', 'kbcProject' => $this->project, 'config' => $config],
-            $this->temp
+            $this->temp,
+            new NullOutput()
         );
         $this->assertArrayHasKey('email', $result2);
         $this->assertEquals($result['email'], $result2['email']);
