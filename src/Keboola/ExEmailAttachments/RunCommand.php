@@ -6,6 +6,7 @@
  */
 namespace Keboola\ExEmailAttachments;
 
+use Keboola\ExEmailAttachments\Exception\Exception;
 use Keboola\Temp\Temp;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Filesystem\Filesystem;
@@ -40,7 +41,7 @@ class RunCommand extends Command
             $userConfiguration['outputPath'] = $outputPath;
             $userConfiguration['state'] = $this->getState($dataDirectory);
 
-            $result = App::execute($appConfiguration, $userConfiguration, new Temp());
+            $result = App::execute($appConfiguration, $userConfiguration, new Temp(), $consoleOutput);
             $jsonEncode = new \Symfony\Component\Serializer\Encoder\JsonEncode();
             $consoleOutput->writeln(is_array($result)
                 ? $jsonEncode->encode($result, JsonEncoder::FORMAT) : $result);

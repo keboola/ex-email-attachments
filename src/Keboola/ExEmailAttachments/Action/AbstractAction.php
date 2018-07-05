@@ -10,21 +10,27 @@ namespace Keboola\ExEmailAttachments\Action;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\S3Client;
 use Aws\Ses\SesClient;
-use Keboola\ExEmailAttachments\Exception;
+use Keboola\ExEmailAttachments\Exception\Exception;
 use Keboola\Temp\Temp;
+use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class AbstractAction
 {
-    /** @var Temp  */
-    protected $temp;
+    /** @var array */
     protected $appConfiguration;
+    /** @var Temp */
+    protected $temp;
+    /** @var OutputInterface */
+    protected $consoleOutput;
+
     protected $emailDomain;
     protected $bucketName;
 
-    public function __construct($appConfiguration, Temp $temp)
+    public function __construct($appConfiguration, Temp $temp, OutputInterface $consoleOutput)
     {
         $this->appConfiguration = $appConfiguration;
         $this->temp = $temp;
+        $this->consoleOutput= $consoleOutput;
     }
 
     protected function getAwsCredentials()

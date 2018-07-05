@@ -1,5 +1,5 @@
 # Email attachments extractor
-KBC Docker app provisions email mailboxes and monitors them for incoming csv files in attachments which are imported to Keboola Storage.
+KBC Docker app provisions email mailboxes and monitors them for incoming csv files in attachments which are imported to Keboola Storage. Each email must contain one text attachment.
 
 Lambda handler is in separate repository [keboola/ex-email-attachments-lambda](https://github.com/keboola/ex-email-attachments-lambda)
 

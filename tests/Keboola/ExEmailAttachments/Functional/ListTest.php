@@ -8,6 +8,7 @@
 namespace Keboola\ExEmailAttachments\Tests\Functional;
 
 use Keboola\ExEmailAttachments\App;
+use Symfony\Component\Console\Output\NullOutput;
 
 class ListTest extends AbstractTest
 {
@@ -37,7 +38,8 @@ class ListTest extends AbstractTest
         $result = App::execute(
             $this->appConfiguration,
             ['action' => 'list', 'kbcProject' => $this->project],
-            $this->temp
+            $this->temp,
+            new NullOutput()
         );
         $this->assertCount(2, $result);
         $this->assertArraySubset([$email1, $email2], $result);
