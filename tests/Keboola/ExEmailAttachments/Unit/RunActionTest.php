@@ -194,15 +194,15 @@ class RunActionTest extends \PHPUnit\Framework\TestCase
     public function testSaveFiles()
     {
         $tempFile1 = $this->temp->createTmpFile()->getRealPath();
-        file_put_contents($tempFile1, "id,name,order\n1,a,11\n2,b,22");
+        file_put_contents($tempFile1, "id;name;order\n1;a;11\n2;b;22");
         $tempFile2 = $this->temp->createTmpFile()->getRealPath();
-        file_put_contents($tempFile2, "id2,name2,order2\n3,c,33\n4,d,44");
+        file_put_contents($tempFile2, "id2;name2;order2\n3;c;33\n4;d;44");
 
         $this->runAction->saveFiles([
             'outputPath' => $this->temp->getTmpFolder(),
             'incremental' => true,
             'enclosure' => '"',
-            'delimiter' => ',',
+            'delimiter' => ';',
             'primaryKey' => ['id'],
         ], [$tempFile1, $tempFile2]);
 

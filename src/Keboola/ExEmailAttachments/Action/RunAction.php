@@ -5,6 +5,7 @@ namespace Keboola\ExEmailAttachments\Action;
 use Aws\Api\DateTimeResult;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use Keboola\Csv\CsvFile;
 use Keboola\ExEmailAttachments\Exception\EmailException;
 use Keboola\ExEmailAttachments\Exception\InvalidEmailRecipientException;
 use Keboola\ExEmailAttachments\Exception\MoreAttachmentsInEmailException;
@@ -171,10 +172,9 @@ class RunAction extends AbstractAction
         }
 
         // Get header from first file
-        $firstFileHandle = fopen($files[0], 'r');
-        $firstFileHeader = fgetcsv($firstFileHandle);
-        fclose($firstFileHandle);
-
+        $firstFile = new CsvFile($files[0], $userConfiguration['delimiter'], $userConfiguration['enclosure']);
+        $firstFileHeader = $firstFile->getHeader();
+        
         foreach ($files as $i => $file) {
             if (!file_exists("{$userConfiguration['outputPath']}/data.csv")) {
                 mkdir("{$userConfiguration['outputPath']}/data.csv");
