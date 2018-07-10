@@ -174,7 +174,8 @@ class RunAction extends AbstractAction
         // Get header from first file
         $firstFile = new CsvFile($files[0], $userConfiguration['delimiter'], $userConfiguration['enclosure']);
         $firstFileHeader = $firstFile->getHeader();
-        
+        unset($firstFile);
+
         foreach ($files as $i => $file) {
             if (!file_exists("{$userConfiguration['outputPath']}/data.csv")) {
                 mkdir("{$userConfiguration['outputPath']}/data.csv");
