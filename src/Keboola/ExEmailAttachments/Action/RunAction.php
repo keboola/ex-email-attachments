@@ -175,6 +175,7 @@ class RunAction extends AbstractAction
         $firstFile = new CsvFile($files[0], $userConfiguration['delimiter'], $userConfiguration['enclosure']);
         $firstFileHeader = $firstFile->getHeader();
         unset($firstFile);
+        $this->consoleOutput->writeln('Imported files will be saved with header: ' . implode($userConfiguration['delimiter'], $firstFileHeader));
 
         foreach ($files as $i => $file) {
             if (!file_exists("{$userConfiguration['outputPath']}/data.csv")) {
