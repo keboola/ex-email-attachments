@@ -18,6 +18,12 @@ class RunAction extends AbstractAction
     protected $s3Client;
     protected $lastDownloadedFileTimestamp;
     protected $processedFilesInLastTimestampSecond;
+    protected $attachmentFolder;
+
+    public function setAttachmentFolder($attachmentFolder)
+    {
+        $this->attachmentFolder = $attachmentFolder;
+    }
 
     public function execute(array $userConfiguration)
     {
@@ -45,6 +51,8 @@ class RunAction extends AbstractAction
         $csvFiles = [];
         foreach ($filesToDownload as $fileToDownload) {
             try {
+                $this->setAttachmentFolder($this->temp->getTmpFolder() . '/' . uniqid());
+                mkdir($this->attachmentFolder);
                 $csvFiles[] = $this->downloadAttachmentFromS3File($fileToDownload['key'], $emailRecipient);
                 $this->updateState($fileToDownload['key'], $fileToDownload['timestamp']);
             } catch (EmailException $e) {
@@ -122,7 +130,7 @@ class RunAction extends AbstractAction
     {
         $parser = new Parser();
         $parser->setPath($tempFile);
-        $parser->saveAttachments($this->temp->getTmpFolder() . '/');
+        $parser->saveAttachments($this->attachmentFolder . '/');
         if (!$this->checkEmailInRecipients([
             $parser->getHeader('to'),
             $parser->getHeader('cc'),
@@ -146,7 +154,7 @@ class RunAction extends AbstractAction
         $result = null;
         $attachments = $parser->getAttachments();
         foreach ($attachments as $attachment) {
-            $file = "{$this->temp->getTmpFolder()}/{$attachment->getFilename()}";
+            $file = "{$this->attachmentFolder}/{$attachment->getFilename()}";
             if (substr(mime_content_type($file), 0, 5) === 'text/') {
                 if ($result) {
                     throw new MoreAttachmentsInEmailException($this->getFromAndDateClause($parser) . ' has more than one text attachment.');
