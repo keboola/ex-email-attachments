@@ -149,6 +149,7 @@ class RunActionTest extends \PHPUnit\Framework\TestCase
         $parser = new Parser();
         $parser->setPath($tempFile);
         $parser->saveAttachments($this->temp->getTmpFolder() . '/');
+        $this->runAction->setAttachmentFolder($this->temp->getTmpFolder());
 
         $this->assertStringEndsWith('test.csv', $this->runAction->getTextAttachment($parser));
     }
@@ -167,6 +168,7 @@ class RunActionTest extends \PHPUnit\Framework\TestCase
         $parser = new Parser();
         $parser->setPath($tempFile);
         $parser->saveAttachments($this->temp->getTmpFolder() . '/');
+        $this->runAction->setAttachmentFolder($this->temp->getTmpFolder());
 
         $this->expectException(NoAttachmentInEmailException::class);
         $this->runAction->getTextAttachment($parser);
@@ -186,6 +188,7 @@ class RunActionTest extends \PHPUnit\Framework\TestCase
         $parser = new Parser();
         $parser->setPath($tempFile);
         $parser->saveAttachments($this->temp->getTmpFolder() . '/');
+        $this->runAction->setAttachmentFolder($this->temp->getTmpFolder());
 
         $this->expectException(MoreAttachmentsInEmailException::class);
         $this->runAction->getTextAttachment($parser);
