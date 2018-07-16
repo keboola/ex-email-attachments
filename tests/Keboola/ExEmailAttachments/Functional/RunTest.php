@@ -64,18 +64,13 @@ class RunTest extends AbstractTest
         $this->assertArrayHasKey('incremental', $manifest);
         $this->assertArrayHasKey('enclosure', $manifest);
         $this->assertArrayHasKey('delimiter', $manifest);
-        $this->assertArrayHasKey('columns', $manifest);
         $this->assertEquals(true, $manifest['incremental']);
         $this->assertEquals('"', $manifest['enclosure']);
         $this->assertEquals(',', $manifest['delimiter']);
-        $this->assertEquals(['id', 'name', 'order'], $manifest['columns']);
 
-        $this->assertDirectoryExists("$dataFolder/data.csv");
-        $csvFiles = glob("$dataFolder/data.csv/*");
-        $this->assertCount(1, $csvFiles);
-
-        $file1 = file($csvFiles[0]);
-        $this->assertCount(5, $file1);
-        $this->assertEquals('"c1","Category 1","1"', trim($file1[0]));
+        $this->assertFileExists("$dataFolder/data.csv");
+        $file = file("$dataFolder/data.csv");
+        $this->assertCount(6, $file);
+        $this->assertEquals('"id","name","order"', trim($file[0]));
     }
 }

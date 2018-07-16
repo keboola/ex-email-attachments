@@ -208,18 +208,22 @@ class RunActionTest extends \PHPUnit\Framework\TestCase
 
         $this->assertFileExists("{$this->temp->getTmpFolder()}/data.csv.manifest");
         $manifest = json_decode(file_get_contents("{$this->temp->getTmpFolder()}/data.csv.manifest"), true);
-        $this->assertArrayHasKey('columns', $manifest);
-        $this->assertEquals(['id', 'name', 'order'], $manifest['columns']);
+        $this->assertArrayHasKey('delimiter', $manifest);
+        $this->assertEquals(';', $manifest['delimiter']);
 
-        $this->assertDirectoryExists("{$this->temp->getTmpFolder()}/data.csv");
-        $csvFiles = glob($this->temp->getTmpFolder().'/data.csv/*');
-        $this->assertCount(2, $csvFiles);
+        $this->assertFileExists("{$this->temp->getTmpFolder()}/data1.csv.manifest");
+        $manifest = json_decode(file_get_contents("{$this->temp->getTmpFolder()}/data1.csv.manifest"), true);
+        $this->assertArrayHasKey('delimiter', $manifest);
+        $this->assertEquals(';', $manifest['delimiter']);
 
-        $file1 = file($csvFiles[0]);
-        $this->assertCount(2, $file1);
-        $this->assertNotEquals('id,name,order', $file1[0]);
-        $file2 = file($csvFiles[1]);
-        $this->assertCount(2, $file2);
-        $this->assertNotEquals('id,name,order', $file1[0]);
+        $this->assertFileExists("{$this->temp->getTmpFolder()}/data.csv");
+        $file1 = file("{$this->temp->getTmpFolder()}/data.csv");
+        $this->assertCount(3, $file1);
+        $this->assertEquals('id;name;order', trim($file1[0]));
+
+        $this->assertFileExists("{$this->temp->getTmpFolder()}/data1.csv");
+        $file2 = file("{$this->temp->getTmpFolder()}/data1.csv");
+        $this->assertCount(3, $file2);
+        $this->assertEquals('id;name;order', trim($file1[0]));
     }
 }

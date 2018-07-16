@@ -5,13 +5,11 @@ namespace Keboola\ExEmailAttachments\Action;
 use Aws\Api\DateTimeResult;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
-use Keboola\Csv\CsvFile;
 use Keboola\ExEmailAttachments\Exception\EmailException;
 use Keboola\ExEmailAttachments\Exception\InvalidEmailRecipientException;
 use Keboola\ExEmailAttachments\Exception\MoreAttachmentsInEmailException;
 use Keboola\ExEmailAttachments\Exception\NoAttachmentInEmailException;
 use PhpMimeMailParser\Parser;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 
 class RunAction extends AbstractAction
@@ -171,27 +169,17 @@ class RunAction extends AbstractAction
             return;
         }
 
-        // Get header from first file
-        $firstFile = new CsvFile($files[0], $userConfiguration['delimiter'], $userConfiguration['enclosure']);
-        $firstFileHeader = $firstFile->getHeader();
-        unset($firstFile);
-
         foreach ($files as $i => $file) {
-            if (!file_exists("{$userConfiguration['outputPath']}/data.csv")) {
-                mkdir("{$userConfiguration['outputPath']}/data.csv");
-            }
-            // Remove headers from files to save them as slices
-            $newFileName = "{$userConfiguration['outputPath']}/data.csv/{$i}";
-            $process = new Process("tail -n +2 $file > $newFileName");
-            $process->run();
+            $counter = $i > 0 ? $i : '';
+            $newFileName = "{$userConfiguration['outputPath']}/data{$counter}.csv";
+            rename($file, $newFileName);
+            $this->saveManifest($newFileName, $userConfiguration);
         }
-
-        $this->saveManifest($userConfiguration, $firstFileHeader);
     }
 
-    public function saveManifest(array $userConfiguration, array $columns) : void
+    public function saveManifest(string $filename, array $userConfiguration) : void
     {
-        $manifest = ['columns' => $columns];
+        $manifest = [];
         if (isset($userConfiguration['incremental'])) {
             $manifest['incremental'] = (bool)$userConfiguration['incremental'];
         }
@@ -204,7 +192,7 @@ class RunAction extends AbstractAction
         if (!empty($userConfiguration['primaryKey'])) {
             $manifest['primary_key'] = $userConfiguration['primaryKey'];
         }
-        file_put_contents("{$userConfiguration['outputPath']}/data.csv.manifest", json_encode($manifest));
+        file_put_contents("{$filename}.manifest", json_encode($manifest));
     }
 
     protected function readState(array $userConfiguration) : void
