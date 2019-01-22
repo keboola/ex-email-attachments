@@ -16,7 +16,7 @@ Lambda handler is in separate repository [keboola/ex-email-attachments-lambda](h
 - If the email exists, the email file is moved to folder `[projectId]/[configId]`
 - If the email does not exist, the file is moved to folder `_invalid`
 - The S3 bucket has a lifecycle 30 days - all files are deleted after that period
-- The extractor checks S3 folder `[projectId]/[configId]` and processes new file. It is saved to a table called `data` in the default bucket. If there are more incoming attachments, they are saved separately into tables called `data1`, `data2`, etc.
+- The extractor checks S3 folder `[projectId]/[configId]` and processes new file. It is saved to a table called `data` in the default bucket. If there are more incoming attachments (e.g. multiple email messages or multiple attachments in a single message), they are saved separately into tables called `data1`, `data2`, etc.
 - It saves timestamp of last processed file to the state
 
 ## Notice
