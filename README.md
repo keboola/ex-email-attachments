@@ -42,3 +42,7 @@ The extractor saves timestamp of last processed email to know where to start in 
     - `dynamo_table` - Set from CloudFormation output `DynamoTable`
     - `rule_set` - SES rule set, `default-rule-set` by default
     - `email_domain` - A domain for mailboxes (e.g. `import.test.keboola.com`)
+
+## License
+
+MIT licensed, see [LICENSE](./LICENSE) file.
